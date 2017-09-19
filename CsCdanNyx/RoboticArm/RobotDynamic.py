@@ -16,7 +16,7 @@ import sympy;
 
 DegreePrecision = 2;    # Degree's rounding precision. ('n' for no decimal.)
 
-f = open('PyAngle1.txt', 'w');
+f = open('../TempData/PyAngle1.txt', 'w');
 
 #***********************Input( Needed position )**************************
 xp = 300;
