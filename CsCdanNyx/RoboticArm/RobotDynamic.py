@@ -16,6 +16,7 @@ import sympy;
 
 DegreePrecision = 'n';    # Degree's rounding precision. ('n' for no decimal.)
 
+f = open('../TempData/PyAngleEq.txt', 'w');
 
 #***********************Input( Needed position )**************************
 xp = 300;
@@ -55,10 +56,13 @@ for yp in range(-70, 71):    #yp ranging from -70 to 70
     a1 = r * math.cos( theta );
     b1 = math.acos( ( math.pow(r, 2) + math.pow(r2, 2) - math.pow(r3, 2) ) / ( 2*r2*r ) );
     
+    J[2] = math.pi/2 - b1 - theta;
     
+    #J[3] = J[2] + math.pi/2 - math.asin( ( a1 - 159 * math.sin(J[2]) ) / 104.5 );
     
     
     j3 = sympy.symbols('j3');
+    eqs = ( 159 * sympy.sin(J[2]) + 104.5 * sympy.sin( math.pi/2 - j3 + J[2] ) - a1 );
     j3Result = sympy.solve( eqs, j3 );
     
     
@@ -115,11 +119,14 @@ for i in range( zp, zp-166, -1 ):        # zp ranging from zp(270) to zp-165(105
     a1 = r * math.cos( theta );
     b1 = math.acos(( math.pow(r, 2) + math.pow(r2, 2) - math.pow(r3, 2)) / ( 2*r2*r ) );
 
+    J[2] = math.pi/2 - b1 - theta;
     
+    #J[3] = J[2] + math.pi/2 - math.asin( ( a1 - 159 * math.sin(J[2]) ) / 104.5 );
     
     
     j3 = sympy.symbols('j3');
     ##Difference from yp's calculation.
+    eqs = ( 159 * sympy.sin(J[2]) + 104.5 * sympy.sin( math.pi/2 - j3 + J[2] ) - a1 );
     j3Result = sympy.solve( eqs, j3 );
 
   
