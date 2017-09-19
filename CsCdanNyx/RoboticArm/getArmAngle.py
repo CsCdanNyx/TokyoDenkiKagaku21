@@ -6,14 +6,8 @@ Created on Tue Sep 19 20:42:20 2017
 """
 
 import math;
-#import sympy;
 
 def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
-
-#***********************Input( Needed position )**************************
-#xp = 300;
-#yp = 0;
-#zp = 270;
 
     #***********************Robotic arm's fixed data**************************
     deltaz = 0;
@@ -32,7 +26,7 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
     J[0] = math.asin((deltay + yp)/r1);
     J[1] = -J[0];
     
-    parallel = 1;            # Parrellel to the floor
+    parallel = 1;            # Parellel to the floor
     
     if parallel:
         deltaz = 134.2 - 20;
@@ -82,7 +76,7 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
     
 
 ########################====Main Function====####################
-
+'''
 xp = 300;
 zp = 270;
 
@@ -100,4 +94,13 @@ for i in range( zp, zp-166, -1 ):
     degree = getArmAngle( xp, yp, i );
     f.write(",".join(str(d) for d in degree)+",\n");
     
+f.close();
+'''
+xp = 300;
+yp = 0;
+zp = 270;
+
+f = open('../TempData/test2.txt', 'w');
+degree = getArmAngle( xp, yp, zp );
+f.write(",".join(str(d) for d in degree)+",\n");
 f.close();
