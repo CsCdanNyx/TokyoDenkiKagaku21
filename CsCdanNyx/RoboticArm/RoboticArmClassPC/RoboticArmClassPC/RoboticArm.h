@@ -1,5 +1,6 @@
 #pragma once
 
+//Arduino incompatible
 #include <string>
 
 class RoboticArm

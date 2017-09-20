@@ -3,8 +3,8 @@
 // 
 
 #include "RoboticArm.h"
-#include <math.h>
 #define _USE_MATH_DEFINES
+#include <math.h>
 #define Rad2Degree 180/M_PI
 
 /*
@@ -24,7 +24,7 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 }
 
 void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp)
-{	
+{
 	float rx = 0, rz = 0;
 	/*	Begin calculations.  */
 	J[0] = asin((deltay + yp) / arm[0]);
@@ -60,25 +60,27 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp)
 	for (size_t i = 0; i < 6; i++)
 		J[i] = round(J[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
 
+	J[1] = -J[1];
+	J[2] = -J[2];
+	J[3] = -J[3];
 }
 
 void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
-{	
+{
 	float vec[3] = { xd - x, yd - y, zd - z };
 
 	for (size_t i = 0; i < 3; i++)
 		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * speed;
 
-	while(x != xd || y != yd || z != zd)
-	{	
+	while (x != xd || y != yd || z != zd)
+	{
 		getArmAngleDeg(x, y, z);
-		
-		showJ();
 
 		x = x + vec[0];
 		y = y + vec[1];
-		z = z + vec[3];
+		z = z + vec[2];
 	}
+	getArmAngleDeg(xd, yd, zd);
 }
 
 float * RoboticArmClass::getJ()
@@ -86,24 +88,26 @@ float * RoboticArmClass::getJ()
 	return J;
 }
 
+/*
 void RoboticArmClass::showJ()
 {
-	printf("J:");
+	Serial.print("J:\t\t");
 	for (size_t i = 0; i < 6; i++)
-		printf(" %f", J[i]);
-	printf("\n");
+		Serial.print(" %.*f", DegPrecision, J[i]);
+	Serial.print("\n");
 }
 
 float * RoboticArmClass::getPosition()
-{	
+{
 	float P[3] = { x, y, z };
 	return P;
 }
 
 void RoboticArmClass::showPosition()
 {
-	printf("Position: %f %f %f\n", x, y, z);
+	Serial.print("Position:\t%.*f %.*f %.*f\n", DegPrecision, x, DegPrecision, y, DegPrecision, z);
 }
+*/
 
 /*
 void RoboticArmClass::Jzero()

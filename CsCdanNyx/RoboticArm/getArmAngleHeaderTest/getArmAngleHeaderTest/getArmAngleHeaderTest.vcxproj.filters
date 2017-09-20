@@ -18,9 +18,6 @@
     <None Include="getArmAngleHeaderTest.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="getArmAngle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RoboticArm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

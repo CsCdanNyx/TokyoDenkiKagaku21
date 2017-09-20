@@ -7,6 +7,10 @@
 *.userosscache
 *.sln.docstates
 
+# Visual Micro auto-gen folder
+__vm/
+#!__vm/Configuration.*
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

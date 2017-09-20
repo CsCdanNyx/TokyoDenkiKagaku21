@@ -5,7 +5,7 @@
 #include <math.h>
 #define Rad2Degree 180/M_PI
 
-//Arduino incapible
+//Arduino incompatible
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -55,6 +55,11 @@ void RoboticArm::getArmAngleDeg(float xp, float yp, float zp)
 	for (size_t i = 0; i < 6; i++)
 		J[i] = round(J[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
 
+	/*
+	J[1] = -J[1];
+	J[2] = -J[2];
+	J[3] = -J[3];
+	*/
 }
 
 void RoboticArm::moveArmPath(float xd, float yd, float zd, float speed)
