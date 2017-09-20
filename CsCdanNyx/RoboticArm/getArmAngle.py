@@ -76,11 +76,36 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
     
 
 ########################====Main Function====####################
+        
 '''
 xp = 300;
 zp = 270;
 
-f = open('../TempData/PyAngleByFunc.txt', 'w');
+f = open('../TempData/pySampleData1.txt', 'w');
+
+for yp in range(-70, 71): 
+    degree = getArmAngle( xp, yp, zp );
+    f.write(",".join(str(d) for d in degree)+", "+ str(yp) + "\n");
+f.close();
+''' 
+
+xp = 300;
+yp = 0;
+zp = 270;
+
+f = open('../TempData/pySampleData2.txt', 'w');
+
+for i in range( zp, zp-166, -1 ):
+    degree = getArmAngle( xp, yp, i );
+    f.write(",".join(str(d) for d in degree)+",\n");
+    
+f.close();
+    
+'''
+xp = 300;
+zp = 270;
+
+f = open('../TempData/.txt', 'w');
 
 for yp in range(-70, 71): 
     degree = getArmAngle( xp, yp, zp );
@@ -96,11 +121,12 @@ for i in range( zp, zp-166, -1 ):
     
 f.close();
 '''
+
+'''
 xp = 300;
-yp = 0;
+yp = 70;
 zp = 270;
 
-f = open('../TempData/test2.txt', 'w');
 degree = getArmAngle( xp, yp, zp );
-f.write(",".join(str(d) for d in degree)+",\n");
-f.close();
+print(degree);
+'''

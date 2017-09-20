@@ -17,13 +17,15 @@ int main()
 {	
 	float xp = 300, yp = 0, zp = 270;
 
-	/*
+	
 	yp = 65;
 	float degree[6] = { 0 };
 	getArmAngleDeg(degree, xp, yp, zp, 0);
+	cout << "degree" << endl;
 	for (size_t i = 0; i < 6; i++)
 		cout << degree[i] << " ";
-	*/
+	cout << endl;
+
 
 	/*
 	FILE * fp;
@@ -53,7 +55,7 @@ int main()
 	f.close();
 	*/
 
-
+	/*
 	ofstream f;
 	f.open("../../../TempData/ttest1.txt");
 	float degree[6] = { 0 };
@@ -77,48 +79,9 @@ int main()
 	}
 
 	f.close();
-
+	*/
 
     return 0;
-}
-
-float * getArmAngleRad(float xp, float yp, float zp, int RadPrecision)
-{
-	float deltay = 4.5, deltaz = 0;				//Servos' coordinate compensations.
-	float arm[4] = { 99, 159, 104.5, 93.595 };	//Arms' length.
-	float J[6] = { 0 };
-	bool parallel = true;						//Paralllel
-	float rx = 0, rz = 0;
-	/*	Begin calculations.  */
-	J[0] = asin((deltay + yp) / arm[0]);
-	J[1] = -J[0];
-
-	if (parallel)
-	{
-		deltaz = 134.2 - 20;
-		rx = xp - arm[3] - arm[0] * cos(J[1]);
-		rz = zp - deltaz;
-	}
-	else
-		;
-	
-	float r = sqrt( pow(rx, 2) + pow(rz, 2) );
-	float theta = atan( rz / rx );
-	float a1 = r * cos(theta);
-	float b1 = acos((pow(r, 2) + pow(arm[1], 2) - pow(arm[2], 2)) / (2 * arm[1]*r) );
-
-	J[2] =  M_PI_2 - b1 - theta;
-	J[3] = J[2] + M_PI_2 - asin((a1 - 159 * sin(J[2])) / arm[2]);
-
-	if (parallel)
-		J[4] = J[3] - J[2];
-	else
-		J[4] = J[3] - J[2] + M_PI/3;
-
-	for (size_t i = 0; i < 6; i++)
-		J[i] = round(J[i] * pow(10, RadPrecision)) / pow(10, RadPrecision);
-
-	return J;
 }
 
 float * getArmAngleDeg(float J[6], float xp, float yp, float zp, int DegPrecision)
@@ -127,8 +90,6 @@ float * getArmAngleDeg(float J[6], float xp, float yp, float zp, int DegPrecisio
 	float arm[4] = { 99, 159, 104.5, 93.595 };	//Arms' length.
 //	float J[6] = { 0 };
 	///
-	for (size_t i = 0; i < 6; i++)
-		J[i] = 0;
 
 	bool parallel = true;						//Paralllel
 	float rx = 0, rz = 0;
@@ -171,3 +132,43 @@ float * getArmAngleDeg(float J[6], float xp, float yp, float zp, int DegPrecisio
 
 	return J;
 }
+
+float * getArmAngleRad(float xp, float yp, float zp, int RadPrecision)
+{
+	float deltay = 4.5, deltaz = 0;				//Servos' coordinate compensations.
+	float arm[4] = { 99, 159, 104.5, 93.595 };	//Arms' length.
+	float J[6] = { 0 };
+	bool parallel = true;						//Paralllel
+	float rx = 0, rz = 0;
+	/*	Begin calculations.  */
+	J[0] = asin((deltay + yp) / arm[0]);
+	J[1] = -J[0];
+
+	if (parallel)
+	{
+		deltaz = 134.2 - 20;
+		rx = xp - arm[3] - arm[0] * cos(J[1]);
+		rz = zp - deltaz;
+	}
+	else
+		;
+
+	float r = sqrt(pow(rx, 2) + pow(rz, 2));
+	float theta = atan(rz / rx);
+	float a1 = r * cos(theta);
+	float b1 = acos((pow(r, 2) + pow(arm[1], 2) - pow(arm[2], 2)) / (2 * arm[1] * r));
+
+	J[2] = M_PI_2 - b1 - theta;
+	J[3] = J[2] + M_PI_2 - asin((a1 - 159 * sin(J[2])) / arm[2]);
+
+	if (parallel)
+		J[4] = J[3] - J[2];
+	else
+		J[4] = J[3] - J[2] + M_PI / 3;
+
+	for (size_t i = 0; i < 6; i++)
+		J[i] = round(J[i] * pow(10, RadPrecision)) / pow(10, RadPrecision);
+
+	return J;
+}
+
