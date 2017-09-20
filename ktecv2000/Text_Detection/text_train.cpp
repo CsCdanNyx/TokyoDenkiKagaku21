@@ -4,13 +4,18 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include<filesystem>
+#include<Windows.h>
 // global variables ///////////////////////////////////////////////////////////////////////////////
 const int MIN_CONTOUR_AREA = 800;
 
 const int RESIZED_IMAGE_WIDTH = 20;
 const int RESIZED_IMAGE_HEIGHT = 30;
 
+const std::string TRAIN_DATA_DIR = "E:\\class\\TDK\\cvTDK\\x64\\Debug";
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void read_directory(const std::string& name, std::vector<std::string> &v);
 int text_train() {
 
 	cv::Mat imgTrainingNumbers;         // input image
@@ -30,18 +35,17 @@ int text_train() {
 
 	// possible chars we are interested in are digits 0 through 9 and capital letters A through Z, put these in vector intValidChars
 	std::vector<int> intValidChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-	for (int c = 1; c <= 23; c++)
+	
+	std::vector<std::string> train_data;
+	read_directory(TRAIN_DATA_DIR, train_data);
+	for (std::vector<std::string>::iterator it = train_data.begin(); it != train_data.end(); ++it)
 	{
-		std::string file;
-		if(c < 10)
-			file = file + "numbers\\train_" + "0" + std::to_string(c) + ".png";
-		else
-			file = file + "numbers\\train_" + std::to_string(c) + ".jpg";
-		imgTrainingNumbers = cv::imread(file);          // read in training numbers image
+		std::string file = *it;
+		imgTrainingNumbers = cv::imread(TRAIN_DATA_DIR + "\\" + file);          // read in training numbers image
 
 		if (imgTrainingNumbers.empty()) {                               // if unable to open image
 			std::cout << "error: image not read from file " << file << "\n\n";         // show error message on command line
-			return(0);                                                  // and exit program
+			return(-1);                                                  // and exit program
 		}
 
 		cv::cvtColor(imgTrainingNumbers, imgGrayscale, CV_BGR2GRAY);        // convert to grayscale
@@ -123,7 +127,7 @@ int text_train() {
 
 	if (fsClassifications.isOpened() == false) {                                                        // if the file was not opened successfully
 		std::cout << "error, unable to open training classifications file, exiting program\n\n";        // show error message
-		return(0);                                                                                      // and exit program
+		return(-1);                                                                                      // and exit program
 	}
 
 	fsClassifications << "classifications" << matClassificationInts;        // write classifications into classifications section of classifications file
@@ -135,7 +139,7 @@ int text_train() {
 
 	if (fsTrainingImages.isOpened() == false) {                                                 // if the file was not opened successfully
 		std::cout << "error, unable to open training images file, exiting program\n\n";         // show error message
-		return(0);                                                                              // and exit program
+		return(-1);                                                                              // and exit program
 	}
 
 	fsTrainingImages << "images" << matTrainingImagesAsFlattenedFloats;         // write training images into images section of images file
@@ -145,6 +149,20 @@ int text_train() {
 
 }
 
-
+void read_directory(const std::string& name, std::vector<std::string> &v)
+{
+	std::string pattern(name);
+	pattern.append("\\*");
+	WIN32_FIND_DATA data;
+	HANDLE hFind;
+	if ((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE) {
+		do {
+			std::string f = data.cFileName;
+			if(f != "." && f != "..")
+				v.push_back(f);
+		} while (FindNextFile(hFind, &data) != 0);
+		FindClose(hFind);
+	}
+}
 
 

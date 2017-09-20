@@ -7,11 +7,12 @@
 #include "text.h"
 // global ///////////////////////////////////////////////////////////////////////////////
 
-const int MIN_CONTOUR_AREA = 1000;
-const int MAX_CONTOUR_AREA = 6000;
+const int MIN_CONTOUR_AREA = 1500;
+const int MAX_CONTOUR_AREA = 10000;
 const int RESIZED_IMAGE_WIDTH = 20;
 const int RESIZED_IMAGE_HEIGHT = 30;
 
+const std::string TRAIN_XML_PATH = "E:\\class\\TDK\\cvTDK\\x64\\Debug\\";
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class ContourWithData {
 public:
@@ -19,14 +20,19 @@ public:
 	std::vector<cv::Point> ptContour;           // contour
 	cv::Rect boundingRect;                      // bounding rect for contour
 	float fltArea;                              // area of contour
-
+	float ratio;
 												///////////////////////////////////////////////////////////////////////////////////////////////
 	bool checkIfContourIsValid() {                              // obviously in a production grade program
-		double ratio = std::max(boundingRect.width,boundingRect.height) / std::min(boundingRect.width, boundingRect.height);
+		ratio = (float)std::max(boundingRect.width,boundingRect.height) / (float)std::min(boundingRect.width, boundingRect.height);
 		
-		if (fltArea < MIN_CONTOUR_AREA || fltArea > MAX_CONTOUR_AREA || ratio > 2.2 || ptContour.size() > 600 || ptContour.size() < 50) return false;           // we would have a much more robust function for 
-		
-		return true;                                            // identifying if a contour is valid !!
+		if (fltArea < MIN_CONTOUR_AREA || ratio > 2.8 || ptContour.size() > 600)
+		{
+			return false;           // we would have a much more robust function for 
+		}
+		else
+		{
+			return true;                                            // identifying if a contour is valid !!
+		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +44,7 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int text_recong(cv::Mat pic) {
+int text_recong(Target &target) {
 	std::vector<ContourWithData> allContoursWithData;           // declare empty vectors,
 	std::vector<ContourWithData> validContoursWithData;         // we will fill these shortly
 
@@ -46,11 +52,11 @@ int text_recong(cv::Mat pic) {
 
 	cv::Mat matClassificationInts;      // we will read the classification numbers into this variable as though it is a vector
 
-	cv::FileStorage fsClassifications("classifications.xml", cv::FileStorage::READ);        // open the classifications file
+	cv::FileStorage fsClassifications(TRAIN_XML_PATH + "classifications.xml", cv::FileStorage::READ);        // open the classifications file
 
 	if (fsClassifications.isOpened() == false) {                                                    // if the file was not opened successfully
 		std::cout << "error, unable to open training classifications file, exiting program\n\n";    // show error message
-		return(0);                                                                                  // and exit program
+		return(-1);                                                                                  // and exit program
 	}
 
 	fsClassifications["classifications"] >> matClassificationInts;      // read classifications section into Mat classifications variable
@@ -60,11 +66,11 @@ int text_recong(cv::Mat pic) {
 
 	cv::Mat matTrainingImagesAsFlattenedFloats;         // we will read multiple images into this single image variable as though it is a vector
 
-	cv::FileStorage fsTrainingImages("images.xml", cv::FileStorage::READ);          // open the training images file
+	cv::FileStorage fsTrainingImages(TRAIN_XML_PATH + "images.xml", cv::FileStorage::READ);          // open the training images file
 
 	if (fsTrainingImages.isOpened() == false) {                                                 // if the file was not opened successfully
 		std::cout << "error, unable to open training images file, exiting program\n\n";         // show error message
-		return(0);                                                                              // and exit program
+		return(-1);                                                                              // and exit program
 	}
 
 	fsTrainingImages["images"] >> matTrainingImagesAsFlattenedFloats;           // read images section into Mat training images variable
@@ -80,10 +86,11 @@ int text_recong(cv::Mat pic) {
 
 	// test ///////////////////////////////////////////////////////////////////////////////
 	
-	//cv::Mat pic = cv::imread("numbers\\train_22.jpg");            // read in the test numbers image
+	cv::Mat pic = target.pic.clone();
+	//cv::Mat pic = cv::imread(TRAIN_XML_PATH + "train_22.jpg");            // read in the test numbers image
+	
 	if (pic.empty()) {                                // if unable to open image
-		std::cout << "error: image not read from file\n\n";         // show error message on command line
-		return(0);                                                  // and exit program
+		return(-1);                                                  // and exit program
 	}
 
 	cv::Mat matGrayscale;           //
@@ -103,8 +110,8 @@ int text_recong(cv::Mat pic) {
 		cv::Size(5, 5),            // smoothing window width and height in pixels
 		0);                        // sigma value, determines how much the image will be blurred, zero makes function choose the sigma value
 
-	cv::namedWindow("Blur: ", CV_WINDOW_NORMAL);
-	cv::imshow("Blur: ", matBlurred);
+	//cv::namedWindow("Blur: ", CV_WINDOW_NORMAL);
+	//cv::imshow("Blur: ", matBlurred);
 
 								   // filter image from grayscale to black and white
 	cv::adaptiveThreshold(matBlurred,                           // input image
@@ -112,7 +119,7 @@ int text_recong(cv::Mat pic) {
 		255,                                  // make pixels that pass the threshold full white
 		cv::ADAPTIVE_THRESH_GAUSSIAN_C,       // use gaussian rather than mean, seems to give better results
 		cv::THRESH_BINARY_INV,                // invert so foreground will be white, background will be black
-		5,                                   // size of a pixel neighborhood used to calculate threshold value
+		9,                                   // size of a pixel neighborhood used to calculate threshold value
 		2);                                   // constant subtracted from the mean or weighted mean
 
 	cv::namedWindow("Threshold: ", CV_WINDOW_NORMAL);
@@ -150,13 +157,15 @@ int text_recong(cv::Mat pic) {
 	std::string strFinalString;         // declare final string, this will have the final number sequence by the end of the program
 
 	for (int i = 0; i < validContoursWithData.size(); i++) {            // for each contour
-
-																		// draw a green rect around the current char
+		std::cout << "[points] " << validContoursWithData[i].ptContour.size() << "\n";
+		std::cout << "[ratio] " << validContoursWithData[i].ratio << "\n";
+		// draw a green rect around the current char
+		/*
 		cv::rectangle(pic,                            // draw rectangle on original image
 			validContoursWithData[i].boundingRect,        // rect to draw
 			cv::Scalar(0, 255, 0),                        // green
 			2);                                           // thickness
-
+		*/
 		cv::Mat matROI = matThresh(validContoursWithData[i].boundingRect);          // get ROI image of bounding rect
 
 		cv::Mat matROIResized;
@@ -168,26 +177,39 @@ int text_recong(cv::Mat pic) {
 		cv::Mat matROIFlattenedFloat = matROIFloat.reshape(1, 1);
 
 		cv::Mat matCurrentChar(0, 0, CV_32F);
-
+		
 		kNearest->findNearest(matROIFlattenedFloat, 1, matCurrentChar);     // finally we can call find_nearest !!!
-
 		float fltCurrentChar = (float)matCurrentChar.at<float>(0, 0);
+		//std::cout << char(int(fltCurrentChar)) << "\n";
 
-		std::cout << char(int(fltCurrentChar)) << "\n";
+		/*
 		cv::namedWindow("Detect", CV_WINDOW_NORMAL);
 		cv::resize(pic, out, cv::Size(600, 600));
 		cv::imshow("Detect", out);
 		cv::waitKey(0);
 		strFinalString = strFinalString + char(int(fltCurrentChar));        // append current char to full string
+		*/
+		if (target.digit == int(fltCurrentChar) - '0')
+		{
+			std::cout << "** detect ! **\n";
+			cv::rectangle(pic,                            // draw rectangle on original image
+				validContoursWithData[i].boundingRect,        // rect to draw
+				cv::Scalar(0, 255, 0),                        // green
+				2);                                           // thickness
+			target.center = cv::Point(validContoursWithData[i].boundingRect.x + validContoursWithData[i].boundingRect.width / 2,
+								  validContoursWithData[i].boundingRect.y + validContoursWithData[i].boundingRect.height / 2);
+			target.bound = validContoursWithData[i].boundingRect;
+			break;
+		}
 	}
 
-	std::cout << "\n\n" << "numbers read = " << strFinalString << "\n\n";       // show the full string
+	//std::cout << "\n\n" << "numbers read = " << strFinalString << "\n\n";       // show the full string
 
 	cv::namedWindow("Detect", CV_WINDOW_NORMAL);
 	cv::resize(pic, out, cv::Size(800, 800));
 	cv::imshow("Detect", out);     // show input image with green boxes drawn around found digits
 
-	cv::waitKey(0);                                         // wait for user key press
+	//cv::waitKey(0);                                         // wait for user key press
 	//system("pause");
 	return(0);
 }

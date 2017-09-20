@@ -5,6 +5,16 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/ml/ml.hpp>
 
+typedef struct Target
+{
+	int digit;
+	cv::Mat pic;
+	cv::Point center;
+	cv::Rect bound;
+};
+
 int text_train();
-int text_recong(cv::Mat pic);
+int text_recong(Target &target);
+
+
 
