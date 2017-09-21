@@ -1,9 +1,9 @@
 # To-Do
 What do you want to do next ? Write it down !!
 
-### CsCdanNyx
+## CsCdanNyx
 
-#### RoboticArmClass
+### RoboticArmClass
 - [ ] Equations modify and add Ang2XYZ.
 - [ ] Add debugging Serial print funtion.
 - [ ] Put x, y, z into an array.
@@ -19,18 +19,18 @@ What do you want to do next ? Write it down !!
 - [ ] Parallel and 60<sup>。</sup> adjustment.
 - [ ] Adjustment with camera.
 
-#### Arm working test
+### Arm working test
 - [ ] Arm gravity impact testing, especially for z-axis (armGoLine moving twice).
 
-#### Machine vision
+### Machine vision
 - [ ] OpenCV project testing.
 
-#### Line tracking
+### Line tracking
 - [ ] Color checking.
 - [ ] Two sets of photo-interrupters.
 
 
-### ktecv2000
+## ktecv2000
 
-### Chrislu30604
+## Chrislu30604
 
