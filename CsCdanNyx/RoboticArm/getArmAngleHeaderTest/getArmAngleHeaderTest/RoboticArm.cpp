@@ -3,6 +3,7 @@
 // 
 
 #include "RoboticArm.h"
+
 /*
 RoboticArmClass::RoboticArmClass(float ix, float iy, float iz)
 {
@@ -12,18 +13,52 @@ RoboticArmClass::RoboticArmClass(float ix, float iy, float iz)
 }
 */
 
+/*--------------------------Initializations----------------------------------*/
 void RoboticArmClass::init(float ix, float iy, float iz)
-{
+{	
+	Serial.println("////--------Start Initiallization--------////");
+
 	this->x = ix;
 	this->y = iy;
 	this->z = iz;
 
-	for (int i = 0; i<6;) {
-		servoAR[i].attach(++i, 500, 2400);
+	for (int i = 0; i < 6; i++) {
+		servoAR[i].attach(i+2, 500, 2400);
 	}
 	armGoTo(x, y, z);
 }
 
+
+///// Debugging ///////////////////////////
+
+void RoboticArmClass::setJ(float * Ang)
+{
+	for (size_t i = 0; i < 6; i++)
+	{
+		J[i] = Ang[i];
+	}
+}
+
+void RoboticArmClass::servoInit()
+{
+	for (int i = 0; i < 6; i++) {
+		servoAR[i].attach(i+2, 500, 2400);
+	}
+}
+
+void RoboticArmClass::servoDoJ()
+{
+	for (int i = 0; i < 6; i++) {
+		servoAR[i].write(J[i]);
+	}
+	if (DELAY)
+		delay(DELAY);
+}
+
+///////////////////////////////////////////
+
+
+/*----------------------Angle & Path Calculations----------------------------*/
 void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 {
 	float rx = 0, rz = 0;
@@ -87,10 +122,20 @@ void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
 	this->z = zd;
 }
 
+
+/*-------------------------------Actions--------------------------------------*/
 void RoboticArmClass::servoAct()
 {
-	for (int i = 0; i < 6; i++) {
-		servoAR[i].write(J[i] + initDegree[i]);
+	for (int i = 0; i < 6; i++)
+	{
+		if (DegPrecision)
+		{
+			servoAR[i].writeMicroseconds(map((J[i] + initDegree[i]), 0, 180, 500, 2400));
+		}
+		else
+		{
+			servoAR[i].write(J[i] + initDegree[i]);
+		}
 	}
 	if (DELAY)
 		delay(DELAY);
@@ -102,7 +147,8 @@ void RoboticArmClass::armGoTo(float xp, float yp, float zp)
 	servoAct();
 
 	///print
-	showJ();
+	//showJ();
+	//showXYZ();
 }
 
 void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
@@ -164,6 +210,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 }
 
 
+/*----------------------------Print and Show----------------------------------*/
 void RoboticArmClass::showJ()
 {
 	//Serial.print("J:\t\t");
@@ -182,8 +229,8 @@ void RoboticArmClass::showJ()
 
 void RoboticArmClass::showXYZ()
 {
-	Serial.print("Position: ");
-	if (DegPrecision)
+	Serial.print("Position:\t");
+	if (!DegPrecision)
 	{
 		Serial.print(int(x), DEC);
 		Serial.print(", ");
