@@ -11,18 +11,19 @@
 
 
 Servo servoAR[6];
-float initDegree[] = { 90, 90, 90, 90, 150, 90 };
 
 void setup() {
+	Serial.begin(9600);
 
 	//Initial Position
-	Arm.init(300, 0, 270);
+	//Arm.init(220, 0, 360);
 
-	Arm.armGoLine(300, -70, 270, 1);
-	Arm.armGoLine(300,  70, 270, 1);
-	Arm.armGoLine(300,   0, 270, 1);
-	Arm.armGoLine(300,   0, 105, 1);
-	Arm.armGoLine(300,   0, 270, 1);
+	//yp: -70~70 zp: 195~360
+	//Arm.armGoLine(220, -70, 360, 1);
+	//Arm.armGoLine(220,  70, 360, 1);
+	//Arm.armGoLine(220,   0, 360, 1);
+	//Arm.armGoLine(220,   0, 195, 1);
+	//Arm.armGoLine(220,   0, 360, 1);
 }
 
 // the loop function runs over and over again until power down or reset
