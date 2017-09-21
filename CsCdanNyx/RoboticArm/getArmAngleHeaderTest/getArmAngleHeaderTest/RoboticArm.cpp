@@ -3,10 +3,6 @@
 // 
 
 #include "RoboticArm.h"
-#define _USE_MATH_DEFINES
-#include <math.h>
-#define Rad2Degree 180/M_PI
-
 /*
 RoboticArmClass::RoboticArmClass(float ix, float iy, float iz)
 {
@@ -21,6 +17,11 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	x = ix;
 	y = iy;
 	z = iz;
+
+	for (int i = 0; i<6;) {
+		servoAR[i].attach(++i, 500, 2400);
+	}
+	armGoTo(x, y, z);
 }
 
 void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp)
@@ -46,7 +47,7 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp)
 
 	J[2] = M_PI_2 - b1 - theta;
 
-	float AsinCheck = (a1 - 159 * sin(J[2])) / arm[2];
+	float AsinCheck = (a1 - arm[1] * sin(J[2])) / arm[2];
 	if (AsinCheck >= 1 && AsinCheck < 1.05)		// Set for hit yp == 65 AsinCheck will be 1, which asin would return "-nan(ind)".
 		AsinCheck = 0.99999;
 
@@ -81,11 +82,50 @@ void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
 		z = z + vec[2];
 	}
 	getArmAngleDeg(xd, yd, zd);
+	x = xd;
+	y = yd;
+	z = zd;
 }
 
 float * RoboticArmClass::getJ()
 {
 	return J;
+}
+
+void RoboticArmClass::servoAct()
+{
+	for (int i = 0; i<6; i++) {
+		servoAR[i].write(J[i] + initDegree[i]);
+	}
+	if (DELAY)
+		delay(DELAY);
+}
+
+void RoboticArmClass::armGoTo(float xp, float yp, float zp)
+{
+	getArmAngleDeg(xp, yp, zp);
+	servoAct();
+}
+
+void RoboticArmClass::armGoLine(float xd, float yd, float zd, float speed)
+{
+	float vec[3] = { xd - x, yd - y, zd - z };
+
+	for (size_t i = 0; i < 3; i++)
+		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * speed;
+
+	while (x != xd || y != yd || z != zd)
+	{
+		armGoTo(x, y, z);
+
+		x = x + vec[0];
+		y = y + vec[1];
+		z = z + vec[2];
+	}
+	armGoTo(xd, yd, zd);
+	x = xd;
+	y = yd;
+	z = zd;
 }
 
 /*
