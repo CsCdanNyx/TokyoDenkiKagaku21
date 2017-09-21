@@ -9,7 +9,8 @@
 
 #include <inttypes.h>
 
-float speed = 0.25;
+float speed = 1;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
+float angSpeed = 1;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 
 //float initDeg[6] = { 90, 90, 150, 90, 150, 90 };
 
@@ -20,6 +21,11 @@ void setup() {
 	//Initial Position
 	Arm.init(220, 0, 360);
 
+	Serial.print("init J:\t\t");
+	Arm.showJ();
+
+	//Arm.servoInit();
+
 	//yp: -70~70 zp: 195~360
 	//Arm.armGoLine(220, -70, 360, speed);
 	//Arm.armGoLine(220,  70, 360, speed);
@@ -27,9 +33,13 @@ void setup() {
 	//Arm.armGoLine(220,   0, 195, speed);
 	//Arm.armGoLine(220,   0, 360, speed);
 
-	//Arm.servoInit();
+	Arm.armGoDirect(180, 0, 360, angSpeed);
+	Serial.println("Revert!!");
+	Arm.armGoDirect(220, 0, 360, angSpeed);
 
-	Serial.flush();		// Flush Arduino Serial output.
+	Serial.println("End!!");
+
+	Serial.flush();					// Flush Arduino Serial output.
 	while (!Serial.available());	// Start looping after Serial port input.
 
 }
@@ -40,7 +50,10 @@ void loop() {
 	//Arm.setJ(initDeg);
 	//Arm.servoDoJ();
 
-	Arm.armGoLine(240, -80, 360, speed);
-	Arm.armGoLine(240,  80, 360, speed);
-	Arm.armGoLine(270,   0, 170, speed);
+	//Arm.armGoLine(240, -70, 360, speed);
+	//Arm.armGoLine(240,  70, 360, speed);
+	//Arm.armGoLine(270,   0, 200, speed);
+	
+	//Arm.armGoDirect(120, 0, 360, angSpeed);
+	//Arm.armGoDirect(220, 0, 360, angSpeed);
 }

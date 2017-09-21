@@ -16,7 +16,7 @@ RoboticArmClass::RoboticArmClass(float ix, float iy, float iz)
 /*--------------------------Initializations----------------------------------*/
 void RoboticArmClass::init(float ix, float iy, float iz)
 {	
-	Serial.println("////--------Start Initiallization--------////");
+	Serial.println("//----Start Initiallization----//");
 
 	this->x = ix;
 	this->y = iy;
@@ -124,23 +124,6 @@ void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
 
 
 /*-------------------------------Actions--------------------------------------*/
-void RoboticArmClass::servoAct()
-{
-	for (int i = 0; i < 6; i++)
-	{
-		if (DegPrecision)
-		{
-			servoAR[i].writeMicroseconds(map((J[i] + initDegree[i]), 0, 180, 500, 2400));
-		}
-		else
-		{
-			servoAR[i].write(J[i] + initDegree[i]);
-		}
-	}
-	if (DELAY)
-		delay(DELAY);
-}
-
 void RoboticArmClass::armGoTo(float xp, float yp, float zp)
 {
 	getArmAngleDeg(xp, yp, zp, J);
@@ -176,37 +159,80 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 {
 	float Ang[6];
-	char sign[6] = { 1 };
+	char sign[5] = { 1, 1, 1, 1, 1 };
+	float tmp;
 
 	getArmAngleDeg(xd, yd, zd, Ang);
 
-	for (size_t i = 0; i < 6; i++)
+	//print
+	//Serial.print("DestiAng:\t");
+	//for (size_t i = 0; i < 6; i++)
+	//{
+	//	Serial.print(Ang[i]);
+	//	Serial.print(", ");
+	//}
+	//Serial.println("");
+
+	//showXYZ();
+
+	for (size_t i = 0; i < 5; i++)
 	{
-		Ang[i] = Ang[i] - J[i];
-		if (abs(Ang[i]) <= angSpeed)
+		tmp = Ang[i] - J[i];
+		if (abs(tmp) <= angSpeed)
 			sign[i] = 0;
-		else if (Ang[i] < 0)
+		else if (tmp < 0)
 			sign[i] = -1;
 	}
 
-	while (sign[0] || sign[1] || sign[2] || sign[3] || sign[4] || sign[5])
+	//print
+	//Serial.print("initSign:\t");
+	//for (size_t i = 0; i < 5; i++)
+	//{
+	//	Serial.print(sign[i], DEC);
+	//	Serial.print(" ");
+	//}
+	//Serial.println("");
+
+	while (sign[0] || sign[1] || sign[2] || sign[3] || sign[4])
 	{
-		for (size_t i = 0; i < 6; i++)
+		servoAct();
+		for (size_t i = 0; i < 5; i++)
 		{
 			if (abs(Ang[i] - J[i]) <= angSpeed)
 				sign[i] = 0;
 
 			J[i] += sign[i] * angSpeed;
 		}
-		servoAct();
+
+		//print
+		//showJ();
 	}
 	
 	for (size_t i = 0; i < 6; i++)
-	{
 		J[i] = Ang[i];
-	}
+
 	servoAct();
 
+	this->x = xd;
+	this->y = yd;
+	this->z = zd;
+
+	//print
+	//showJ();
+	//showXYZ();
+}
+
+void RoboticArmClass::servoAct()
+{
+	for (int i = 0; i < 6; i++)
+	{
+		if (DegPrecision)
+			servoAR[i].writeMicroseconds(map((J[i] + initDegree[i]), 0, 180, 500, 2400));
+		else
+			servoAR[i].write(J[i] + initDegree[i]);
+	}
+	if (DELAY)
+		delay(DELAY);
 }
 
 

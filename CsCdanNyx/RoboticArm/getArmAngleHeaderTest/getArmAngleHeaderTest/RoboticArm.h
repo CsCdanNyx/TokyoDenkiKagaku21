@@ -10,9 +10,9 @@
 #endif
 
 //Some parameters could be set
-#define DegPrecision 3				// Angle's decimal precision.
-#define DELAY 0					// Function servoAct's delaying.
-#define Cm2Unit	1					// Defines how many coordinate units in 1 cm
+#define DegPrecision 1				// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
+#define DELAY 0						// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
+#define Cm2Unit	1					// Defines how many coordinate units in 1 cm.
 
 #define _USE_MATH_DEFINES
 #define Rad2Degree 180/M_PI
@@ -46,7 +46,7 @@ class RoboticArmClass
 	void servoAct();													// Servos' signal output.
 	void armGoTo(float xp, float yp, float zp);							// Arm move to point.
 	void armGoLine(float xd, float yd, float zd, float step = 1);			// Move to destination linearly.
-	void armGoDirect(float xd, float yd, float zd, float angSpeed = 1);		// Move to destination directly by changing angle per angSpeed degree.
+	void armGoDirect(float xd, float yd, float zd, float angSpeed = 1);		// Move to destination directly and angularly by changing angle per angSpeed degree.
 
 
 	/*----------------------------Print and Show----------------------------------*/
@@ -64,7 +64,7 @@ class RoboticArmClass
 	float deltay = 4.5f, deltaz = 0;				//Servos' coordinate compensations.
 	float arm[4] = { 99, 159, 104.5f, 93.595f };	//Arms' length.
 	bool parallel = true;							//Parallel to the ground.
-	float J[6] = { 0, 0, 0, 0, 0, 135 };								//Each Servo's angle.
+	float J[6] = { 0, 0, 0, 0, 0, 135 };			//Each Servo's angle.
 
 	Servo servoAR[6];
 };
