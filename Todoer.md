@@ -5,10 +5,10 @@ What do you want to do next ? Write it down !!
 
 ### RoboticArmClass
 - [ ] Equations modify and add Ang2XYZ.
-- [ ] Add debugging Serial print funtion.
+- [X] Add debugging Serial print funtion.
 - [ ] Put x, y, z into an array.
 - [ ] Add funtion to show absolute angle.
-- [ ] Pre-defined servos' pin.
+- [X] Pre-defined servos' pin.
 - [ ] Add angle limitations' checking in armGoDirect.
 - [ ] Add XYZ limitation's checking.
 - [ ] Add functions to grab marker pen (J[5] fixing or separation).

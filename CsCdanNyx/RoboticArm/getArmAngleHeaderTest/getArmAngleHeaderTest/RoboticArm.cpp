@@ -22,9 +22,13 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->y = iy;
 	this->z = iz;
 
-	for (int i = 0; i < 6; i++) {
-		servoAR[i].attach(i+2, 500, 2400);
-	}
+	servoAR[0].attach(servoPin0, 500, 2400);
+	servoAR[1].attach(servoPin1, 500, 2400);
+	servoAR[2].attach(servoPin2, 500, 2400);
+	servoAR[3].attach(servoPin3, 500, 2400);
+	servoAR[4].attach(servoPin4, 500, 2400);
+	servoAR[5].attach(servoPin5, 500, 2400);
+
 	armGoTo(x, y, z);
 }
 
@@ -235,62 +239,29 @@ void RoboticArmClass::servoAct()
 		delay(DELAY);
 }
 
-
 /*----------------------------Print and Show----------------------------------*/
-void RoboticArmClass::showJ()
+void RoboticArmClass::showJ(const char * title)
 {
-	//Serial.print("J:\t\t");
-	for (size_t i = 0; i < 6; i++)
-	{
-		Serial.print(int(J[i]), DEC);
-		if (DegPrecision)
-		{
-			Serial.print(".");
-			Serial.print(int(J[i] * pow(10, DegPrecision)), DEC);
-		}
-		Serial.print(", ");
-	}
-	Serial.println("");
+	printOut(J, SIZEOF_ARRAY(J), title);
 }
 
-void RoboticArmClass::showXYZ()
+void RoboticArmClass::showXYZ(const char * title, bool XYZdisp)
 {
-	Serial.print("Position:\t");
-	if (!DegPrecision)
-	{
-		Serial.print(int(x), DEC);
-		Serial.print(", ");
-		Serial.print(int(y), DEC);
-		Serial.print(", ");
-		Serial.print(int(z), DEC);
-	}
-	else
-	{
-		Serial.print(int(x), DEC);
-		if (DegPrecision)
-		{
-			Serial.print(".");
-			Serial.print(int(x * pow(10, DegPrecision)), DEC);
-			Serial.print(", ");
-		}
+	if (title)
+		Serial.print(title);
 
-		Serial.print(int(y), DEC);
-		if (DegPrecision)
-		{
-			Serial.print(".");
-			Serial.print(int(y * pow(10, DegPrecision)), DEC);
-			Serial.print(", ");
-		}
+	else if (XYZdisp)
+		Serial.print("XYZ:\t");
+	printOut(this->x, NULL, ", ");
+	printOut(this->y, NULL, ", ");
+	printOut(this->z, NULL);
 
-		Serial.print(int(z), DEC);
-		if (DegPrecision)
-		{
-			Serial.print(".");
-			Serial.print(int(z * pow(10, DegPrecision)), DEC);
-		}
-	}
-	
-	Serial.println("");
+	//if (XYZdisp)
+	//{
+	//	printOut(this->x, "x", ", ");
+	//	printOut(this->y, "y", ", ");
+	//	printOut(this->z, "z");
+	//}
 }
 
 float * RoboticArmClass::getJ()
@@ -304,6 +275,22 @@ float * RoboticArmClass::getXYZ()
 	return P;
 }
 
+void RoboticArmClass::printOut(float * AR, size_t ARsize, const char * Hstring, const char * split)
+{
+	if (Hstring)
+		Serial.print(Hstring);
+
+	for (size_t i = 0; i < ARsize-1; i++)
+		Serial.print(String(AR[i], DegPrecision) + split + " ");
+	Serial.print(String(AR[ARsize], DegPrecision) + "\n");
+}
+
+void RoboticArmClass::printOut(float n, const char * Hstring, const char * endString)
+{
+	if (Hstring)
+		Serial.print(String(Hstring) + ": ");
+	Serial.print(String(n, DegPrecision) + endString);
+}
 
 /*
 void RoboticArmClass::Jzero()

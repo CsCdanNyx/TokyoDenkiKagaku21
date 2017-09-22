@@ -7,8 +7,6 @@
 // the setup function runs once when you press reset or power the board
 #include "RoboticArm.h"
 
-#include <inttypes.h>
-
 float speed = 1;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
 float angSpeed = 1;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 
@@ -21,8 +19,8 @@ void setup() {
 	//Initial Position
 	Arm.init(220, 0, 360);
 
-	Serial.print("init J:\t\t");
-	Arm.showJ();
+	Arm.showJ("init J:\t");
+	Arm.showXYZ("init Position: ", true);
 
 	//Arm.servoInit();
 
@@ -33,9 +31,9 @@ void setup() {
 	//Arm.armGoLine(220,   0, 195, speed);
 	//Arm.armGoLine(220,   0, 360, speed);
 
-	Arm.armGoDirect(180, 0, 360, angSpeed);
-	Serial.println("Revert!!");
-	Arm.armGoDirect(220, 0, 360, angSpeed);
+	//Arm.armGoDirect(180, 0, 360, angSpeed);
+	//Serial.println("Revert!!");
+	//Arm.armGoDirect(220, 0, 360, angSpeed);
 
 	Serial.println("End!!");
 

@@ -10,12 +10,22 @@
 #endif
 
 //Some parameters could be set
-#define DegPrecision 1				// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
+#define DegPrecision 0				// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define DELAY 0						// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 #define Cm2Unit	1					// Defines how many coordinate units in 1 cm.
 
+//Servo's Pin settings
+#define servoPin0	2
+#define servoPin1	3
+#define servoPin2	4
+#define servoPin3	5
+#define servoPin4	6
+#define servoPin5	7
+
 #define _USE_MATH_DEFINES
 #define Rad2Degree 180/M_PI
+//For printing
+#define SIZEOF_ARRAY(array) (sizeof(array)/sizeof(*array))
 
 #include <math.h>
 #include "Servo.h"
@@ -50,8 +60,10 @@ class RoboticArmClass
 
 
 	/*----------------------------Print and Show----------------------------------*/
-	void showJ();
-	void showXYZ();
+	void showJ(const char * title = NULL);
+	void showXYZ(const char * title = NULL, bool XYZdisp = false);
+	void printOut(float * AR, size_t ARsize, const char * Hstring = NULL, const char * split = ",");	//Print out array.
+	void printOut(float n, const char * Hstring = NULL, const char * endString = "\n");					//Print out variable.
 
 	float * getJ();
 	float * getXYZ();
