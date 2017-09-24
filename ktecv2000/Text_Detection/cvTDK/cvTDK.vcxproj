@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="knock_down.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MultiObjectTrackingBasedOnColor\multipleObjectTracking.cpp" />
+    <ClCompile Include="MultiObjectTrackingBasedOnColor\Object.cpp" />
     <ClCompile Include="Serial.cpp" />
     <ClCompile Include="text_recong.cpp" />
     <ClCompile Include="text_train.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MultiObjectTrackingBasedOnColor\Object.h" />
     <ClInclude Include="SerialClass.h" />
     <ClInclude Include="text.h" />
   </ItemGroup>
@@ -100,7 +102,6 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\opencv\build\include\opencv2;C:\opencv\build\include\opencv;C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>/std:c++17 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>C:\opencv\build\x64\vc14\lib\opencv_world330.lib;C:\opencv\build\x64\vc14\lib\opencv_world330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -128,7 +129,6 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\opencv\build\include\opencv2;C:\opencv\build\include\opencv;C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>/std:c++17 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

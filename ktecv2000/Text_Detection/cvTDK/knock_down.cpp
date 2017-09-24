@@ -8,13 +8,14 @@
 #define digit_2_w 10.6
 #define digit_2_h 16.1
 
-int _tmain(int argc, _TCHAR* argv[])
+//int _tmain(int argc, _TCHAR* argv[])
+int knock_down()
 {
 	/*
 	if (argc < 2)
 	{
-		std::cout << "arg1 : device\n";
-		return -1;
+	std::cout << "arg1 : device\n";
+	return -1;
 	}*/
 
 	Target target;
@@ -36,7 +37,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::cout << "propotion : " << prop_x << "," << prop_y << "\n";
 
-	float arm_x_dis = (target.center.x - (target.pic.cols / 2)) * prop_x ;
+	float arm_x_dis = (target.center.x - (target.pic.cols / 2)) * prop_x;
 	float arm_y_dis = (target.center.y - (target.pic.rows / 2)) * prop_y * -1;
 	std::cout << "@ the distance from center : " << arm_x_dis << "," << arm_y_dis << "\n";
 	cv::waitKey(0);
@@ -46,7 +47,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	Serial* SP = new Serial(argv[1]);    // adjust as needed
 
 	if (SP->IsConnected())
-		std::cout << "Connected\n";
+	std::cout << "Connected\n";
 
 	char incomingData[256] = "";
 	int dataLength = 255;
@@ -54,13 +55,13 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//while (SP->IsConnected())
 	{
-		len_read = SP->ReadData(incomingData, dataLength);
-		printf("Bytes read: (0 means no data available) %i\n", len_read);
-		incomingData[len_read] = 0;
+	len_read = SP->ReadData(incomingData, dataLength);
+	printf("Bytes read: (0 means no data available) %i\n", len_read);
+	incomingData[len_read] = 0;
 
-		printf("=> %s\n", incomingData);
+	printf("=> %s\n", incomingData);
 
-		Sleep(500);
+	Sleep(500);
 	}*/
 	return 0;
 }
