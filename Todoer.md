@@ -31,6 +31,26 @@ What do you want to do next ? Write it down !!
 
 
 ## ktecv2000
-
+### CAR MOVEMENT
+- [ ] Move smoothly at uphill.
+- [ ] Accurate measurement of wheel moving distance by optical interrupter.
+- [X] Detect check point.
+- [X] Send the signal of reaching check point back.
+### SLIDER MOVEMENT
+- [X] Velocity measurement of vertical and horizontal sliders.
+- [X] Well APIs and their implementations for sliders (Seperated from original Class).
+### *TASK_1* - KNOCK DOWN SIGN STAND
+- [X] Detect specific digit.
+- [X] Calculate the distance to the digit for the two sliders.
+- [X] Serial communication.
+- [ ] Communication between computer(position, picture) and arduino(movement).
+- [ ] Flat and fixed camera (To fix the inaccurance of y-axis distance).
+- [ ] **Completely working**
+### *TASK_2* - SHORT PATH
+- [X] Cones detections
+- [ ] (Car) Turn to specific angle.
+- [ ] Feedback control by camera (cones' positions).
+- [ ] Communication between computer(position, vedio) and arduino(movement).
+- [ ] **Completely working**
 ## Chrislu30604
 
