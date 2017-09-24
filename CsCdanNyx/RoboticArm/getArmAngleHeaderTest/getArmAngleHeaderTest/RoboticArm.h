@@ -38,7 +38,7 @@ class RoboticArmClass
 {
  public:
 	/*--------------------------Initializations----------------------------------*/
-	//RoboticArmClass(float ix, float iy, float iz);
+	//RoboticArmClass();
 	void init(float ix = 220, float iy = 0, float iz = 360);
 	
 	///// Debugging ///////////////////////////
@@ -79,25 +79,17 @@ class RoboticArmClass
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 135 };			// Each Servo's angle.
 	bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
-	float liftAngle = 0;
+	float liftAngle = 0;							// Claw's lifting angle.
 	Servo servoAR[6];
 
-
-
+	
 	// Arm's constant settings(mm).
-	const float arm[4] = { 99, 159, 104.5f, 134.2f };	// Arms' length.																	//const float RoboticArmClass::arm[5] = { 99, 134.2f, 159, 104.5f,  };	// Arms' length.
-	const float delX = 63.238f, delZ = 69.531f;			// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
+	const float arm[4] = { 99, 159, 104.5f, 134.2f };		// Arms' length.
+	//const float arm[5] = { 99, 134.2f, 159, 104.5f, 93.9875f };	// Arms' length.
+	const float delX = 63.238f, delZ = 69.531f;				// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
 	const float delXP = 91.835f, delZP = 20;
 	const float delYc = 4.5f;
-
-	/*
-	// Arm's constant settings(mm).
-	static const float arm[4];			// Arms' length.
-	//static const float arm[5];			// Arms' length.
-	static const float delX, delZ;		// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
-	static const float delXP, delZP;
-	static const float delYc;
-	*/
+	
 };
 
 extern RoboticArmClass Arm;

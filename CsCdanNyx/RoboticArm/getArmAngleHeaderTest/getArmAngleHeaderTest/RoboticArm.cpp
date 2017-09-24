@@ -4,27 +4,11 @@
 
 #include "RoboticArm.h"
 
+///*----------------------------Arm's settings----------------------------------*/
 /*
-// Arm's constant settings(mm).
-const float RoboticArmClass::arm[4] = { 99, 159, 104.5f, 134.2f };	// Arms' length.
-//const float RoboticArmClass::arm[5] = { 99, 134.2f, 159, 104.5f,  };	// Arms' length.
-const float RoboticArmClass::delX  = 63.238f, delZ  = 69.531f;		// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
-const float RoboticArmClass::delXP = 91.835f, delZP = 20;
-const float RoboticArmClass::delYc = 4.5f;
-*/
-
-/*
-RoboticArmClass::RoboticArmClass(float ix, float iy, float iz)
+RoboticArmClass::RoboticArmClass()
 {
-	const float RoboticArmClass::arm[4] = { 99, 159, 104.5f, 134.2f };	// Arms' length.
-	const float RoboticArmClass::arm[5] = { 99, 134.2f, 159, 104.5f,  };	// Arms' length.
-	const float RoboticArmClass::delX = 63.238f, delZ = 69.531f;		// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
-	const float RoboticArmClass::delXP = 91.835f, delZP = 20;
-	const float RoboticArmClass::delYc = 4.5f;
 
-	x = ix;
-	y = iy;
-	z = iz;
 }
 */
 
