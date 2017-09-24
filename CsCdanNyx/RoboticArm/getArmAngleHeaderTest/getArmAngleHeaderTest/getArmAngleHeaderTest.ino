@@ -8,7 +8,7 @@
 #include "RoboticArm.h"
 
 float speed = 1;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
-float angSpeed = 1;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
+float angSpeed = 0.5;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 
 //float initDeg[6] = { 90, 90, 150, 90, 150, 90 };
 

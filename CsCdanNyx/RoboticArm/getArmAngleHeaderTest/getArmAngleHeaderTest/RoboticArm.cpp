@@ -5,8 +5,23 @@
 #include "RoboticArm.h"
 
 /*
+// Arm's constant settings(mm).
+const float RoboticArmClass::arm[4] = { 99, 159, 104.5f, 134.2f };	// Arms' length.
+//const float RoboticArmClass::arm[5] = { 99, 134.2f, 159, 104.5f,  };	// Arms' length.
+const float RoboticArmClass::delX  = 63.238f, delZ  = 69.531f;		// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
+const float RoboticArmClass::delXP = 91.835f, delZP = 20;
+const float RoboticArmClass::delYc = 4.5f;
+*/
+
+/*
 RoboticArmClass::RoboticArmClass(float ix, float iy, float iz)
 {
+	const float RoboticArmClass::arm[4] = { 99, 159, 104.5f, 134.2f };	// Arms' length.
+	const float RoboticArmClass::arm[5] = { 99, 134.2f, 159, 104.5f,  };	// Arms' length.
+	const float RoboticArmClass::delX = 63.238f, delZ = 69.531f;		// Servos' coordinate compensations, while delta Y stay the same, P for parallel.
+	const float RoboticArmClass::delXP = 91.835f, delZP = 20;
+	const float RoboticArmClass::delYc = 4.5f;
+
 	x = ix;
 	y = iy;
 	z = iz;
@@ -65,19 +80,25 @@ void RoboticArmClass::servoDoJ()
 /*----------------------Angle & Path Calculations----------------------------*/
 void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 {
-	float rx = 0, rz = 0;
 	/*	Begin calculations.  */
-	Ang[0] = asin((deltay + yp) / arm[0]);
+
+	// Ang[0], Ang[1]
+	Ang[0] = asin((delYc + yp) / arm[0]);
 	Ang[1] = -Ang[0];
 
-	if (parallel)
+	// Setting triangle () to calculate Ang[2], Ang[3]
+	float rx = xp - arm[0] * cos(Ang[1]);
+	float rz = zp - arm[3];
+	if (parallelToFloor)
 	{
-		deltaz = 134.2 - 20;
-		rx = xp - arm[3] - arm[0] * cos(Ang[1]);
-		rz = zp - deltaz;
+		rx -= delXP;
+		rz += delZP;
 	}
 	else
-		;
+	{
+		rx -= delX;
+		rz -= delZ;
+	}
 
 	float r = sqrt(pow(rx, 2) + pow(rz, 2));
 	float theta = atan(rz / rx);
@@ -86,13 +107,14 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 
 	Ang[2] = M_PI_2 - b1 - theta;
 
-	float AsinCheck = (a1 - arm[1] * sin(Ang[2])) / arm[2];
-	if (AsinCheck >= 1 && AsinCheck < 1.05)		// Set for hit yp == 65 AsinCheck will be 1, which asin would return "-nan(ind)".
-		AsinCheck = 0.99999;
+	// AsinIndCheck prevent asin from calculation over 1, which turns out to be -nan(ind), specified for yp == 65.
+	float AsinIndCheck = (a1 - arm[1] * sin(Ang[2])) / arm[2];
+	if (AsinIndCheck >= 1 && AsinIndCheck < 1.05)
+		AsinIndCheck = 0.99999;
 
-	Ang[3] = Ang[2] + M_PI_2 - asin(AsinCheck);
+	Ang[3] = Ang[2] + M_PI_2 - asin(AsinIndCheck);
 
-	if (parallel)
+	if (parallelToFloor)
 		Ang[4] = Ang[3] - Ang[2];
 	else
 		Ang[4] = Ang[3] - Ang[2] + M_PI / 3;
@@ -143,7 +165,7 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 	float vec[3] = { xd - x, yd - y, zd - z };			// Vector point from src to destination.
 
 	for (size_t i = 0; i < 3; i++)						// Step vector calculation.
-		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * Cm2Unit;
+		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * CM2UNIT/10;
 
 	while (x != xd || y != yd || z != zd)
 	{
@@ -152,12 +174,20 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 		this->x += vec[0];
 		this->y += vec[1];
 		this->z += vec[2];
+
+		//print
+		//showJ();
+		//showXYZ();
 	}
 	armGoTo(xd, yd, zd);
 
 	this->x = xd;
 	this->y = yd;
 	this->z = zd;
+
+	//print
+	//showJ();
+	//showXYZ();
 }
 
 void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
@@ -169,14 +199,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	getArmAngleDeg(xd, yd, zd, Ang);
 
 	//print
-	//Serial.print("DestiAng:\t");
-	//for (size_t i = 0; i < 6; i++)
-	//{
-	//	Serial.print(Ang[i]);
-	//	Serial.print(", ");
-	//}
-	//Serial.println("");
-
+	//printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
 	//showXYZ();
 
 	for (size_t i = 0; i < 5; i++)
@@ -187,15 +210,6 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 		else if (tmp < 0)
 			sign[i] = -1;
 	}
-
-	//print
-	//Serial.print("initSign:\t");
-	//for (size_t i = 0; i < 5; i++)
-	//{
-	//	Serial.print(sign[i], DEC);
-	//	Serial.print(" ");
-	//}
-	//Serial.println("");
 
 	while (sign[0] || sign[1] || sign[2] || sign[3] || sign[4])
 	{
@@ -222,8 +236,8 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	this->z = zd;
 
 	//print
-	//showJ();
-	//showXYZ();
+	//showJ("Final J: ");
+	//showXYZ("Final XYZ: ");
 }
 
 void RoboticArmClass::servoAct()
@@ -244,6 +258,20 @@ void RoboticArmClass::showJ(const char * title)
 {
 	printOut(J, SIZEOF_ARRAY(J), title);
 }
+
+//void RoboticArmClass::showAbJ(const char * title)
+//{
+//	if (title)
+//	{
+//		Serial.print(String(title) + ": ");
+//	}
+//	Serial.print(String(AR[i], DegPrecision) + split + " ");
+//	float Ang[6];
+//	for (size_t i = 0; i < 6; i++)
+//		Ang[i] = J[i] + initDegree[i];
+//
+//	printOut(Ang, SIZEOF_ARRAY(Ang), title);
+//}
 
 void RoboticArmClass::showXYZ(const char * title, bool XYZdisp)
 {
@@ -302,4 +330,3 @@ void RoboticArmClass::Jzero()
 
 
 RoboticArmClass Arm;
-
