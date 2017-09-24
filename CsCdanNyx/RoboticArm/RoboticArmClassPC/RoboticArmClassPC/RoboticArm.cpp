@@ -41,7 +41,7 @@ void RoboticArm::getArmAngleDeg(float xp, float yp, float zp)
 
 	J[2] = M_PI_2 - b1 - theta;
 
-	float AsinCheck = (a1 - 159 * sin(J[2])) / arm[2];
+	float AsinCheck = (a1 - arm[1] * sin(J[2])) / arm[2];
 	if (AsinCheck >= 1 && AsinCheck < 1.05)		// Set for hit yp == 65 AsinCheck will be 1, which asin would return "-nan(ind)".
 		AsinCheck = 0.99999;
 
@@ -55,12 +55,28 @@ void RoboticArm::getArmAngleDeg(float xp, float yp, float zp)
 	for (size_t i = 0; i < 6; i++)
 		J[i] = round(J[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
 
-	/*
 	J[1] = -J[1];
 	J[2] = -J[2];
 	J[3] = -J[3];
-	*/
 }
+
+//float * RoboticArm::getArmPosition(float * angle)
+//{	
+//	float _J[6];
+//	float xyz[3];
+//	memcpy(_J, angle, 6 * sizeof(float));
+//	_J[1] = -_J[1];
+//	_J[2] = -_J[2];
+//	_J[3] = -_J[3];
+//
+//	for (size_t i = 0; i < 6; i++)
+//		_J[i] = _J[i] / Rad2Degree;
+//
+//	float AsinCheck = sin(_J[2] - _J[3] + M_PI_2);
+//	float a1 = AsinCheck * arm[2] + arm[1] * sin(_J[2]);
+//	
+//	xyz[1] = sin(_J[0]) * arm[0] - deltay;
+//}
 
 void RoboticArm::moveArmPath(float xd, float yd, float zd, float speed)
 {
@@ -68,7 +84,7 @@ void RoboticArm::moveArmPath(float xd, float yd, float zd, float speed)
 
 	for (size_t i = 0; i < 3; i++)
 		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * speed;
-	
+
 	while (x != xd || y != yd || z != zd)
 	{
 		getArmAngleDeg(x, y, z);
@@ -80,8 +96,9 @@ void RoboticArm::moveArmPath(float xd, float yd, float zd, float speed)
 
 	}
 	getArmAngleDeg(xd, yd, zd);
-	
+
 }
+
 
 void RoboticArm::moveArmPathPrint(float xd, float yd, float zd, float speed, std::string file)//, string file
 {
@@ -109,8 +126,8 @@ void RoboticArm::moveArmPathPrint(float xd, float yd, float zd, float speed, std
 		y = y + vec[1];
 		z = z + vec[2];
 	}
-
 	getArmAngleDeg(xd, yd, zd);
+	
 	for (size_t i = 0; i < 6; i++)
 		f << degree[i] << ',';
 	f << endl;
@@ -130,13 +147,13 @@ void RoboticArm::showJ()
 	printf("\n");
 }
 
-float * RoboticArm::getPosition()
+float * RoboticArm::getXYZ()
 {
 	float P[3] = { x, y, z };
 	return P;
 }
 
-void RoboticArm::showPosition()
+void RoboticArm::showXYZ()
 {
 	printf("Position:\t%.*f %.*f %.*f\n", DegPrecision, x, DegPrecision, y, DegPrecision, z);
 }

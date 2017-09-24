@@ -7,43 +7,51 @@
 // the setup function runs once when you press reset or power the board
 #include "RoboticArm.h"
 
-#include "Servo.h"
-#include <inttypes.h>
+float speed = 1;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
+float angSpeed = 1;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 
-
-Servo servoAR[6];
-float initDegree[] = { 90, 90, 90, 90, 150, 90 };
+//float initDeg[6] = { 90, 90, 150, 90, 150, 90 };
 
 void setup() {
 
-	for (int i = 0; i<6;) {
-		servoAR[i].attach(++i, 500, 2400);
-	}
+	Serial.begin(9600);
 
 	//Initial Position
-	ServoAct(initDegree);
-	Arm.init(300, 0, 270);
+	Arm.init(220, 0, 360);
 
-	for (size_t i = -70; i < 71; i++) {
-		Arm.getArmAngleDeg(300, i, 270);
-		float * degree = Arm.getJ();
+	Arm.showJ("init J:\t");
+	Arm.showXYZ("init Position: ", true);
 
-		for (size_t i = 0; i < 6; i++) {
-			degree[i] = initDegree[i] + degree[i];
-		}
-		ServoAct(degree);
-	}
+	//Arm.servoInit();
+
+	//yp: -70~70 zp: 195~360
+	//Arm.armGoLine(220, -70, 360, speed);
+	//Arm.armGoLine(220,  70, 360, speed);
+	//Arm.armGoLine(220,   0, 360, speed);
+	//Arm.armGoLine(220,   0, 195, speed);
+	//Arm.armGoLine(220,   0, 360, speed);
+
+	//Arm.armGoDirect(180, 0, 360, angSpeed);
+	//Serial.println("Revert!!");
+	//Arm.armGoDirect(220, 0, 360, angSpeed);
+
+	Serial.println("End!!");
+
+	Serial.flush();					// Flush Arduino Serial output.
+	while (!Serial.available());	// Start looping after Serial port input.
 
 }
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-  
-}
 
-void ServoAct(float degree[]) {
-	for (int i = 0; i<6;) {
-		servoAR[i].write(degree[i++]);
-	}
-	delay(20);
+	//Arm.setJ(initDeg);
+	//Arm.servoDoJ();
+
+	//Arm.armGoLine(240, -70, 360, speed);
+	//Arm.armGoLine(240,  70, 360, speed);
+	//Arm.armGoLine(270,   0, 200, speed);
+	
+	//Arm.armGoDirect(120, 0, 360, angSpeed);
+	//Arm.armGoDirect(220, 0, 360, angSpeed);
 }

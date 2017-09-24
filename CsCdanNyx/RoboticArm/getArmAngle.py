@@ -73,8 +73,26 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
     else:
         return [ round(math.degrees(d), DegreePrecision) for d in J ];
     
-    
 
+def getArmPosition(*J):
+    #***********************Robotic arm's fixed data**************************
+    deltaz = 0;
+    deltay = 4.5;
+    r1 = 99;
+    r2 = 159;
+    r3 = 104.5;
+    r4 = 93.535;
+    #***********************Position Calculations******************
+    J = [math.radians(d) for d in J];
+    parallel = 1;            # Parellel to the floor
+    if parallel:
+        deltaz = 134.2 - 20;
+    else:
+        pass;
+    yp = (r1*math.sin(J[0])) - deltay;
+    xp = r4 + r1*math.cos(J[0]) + r2*math.sin(J[2]) + r3*math.sin((math.pi/2) - J[3] + J[2]);
+    zp = deltaz + r2*math.cos(J[2]) - r3*math.cos((math.pi/2) - J[3] + J[2]);
+    return [xp,yp,zp]
 ########################====Main Function====####################
         
 '''
@@ -96,11 +114,13 @@ zp = 270;
 f = open('../TempData/pySampleData2.txt', 'w');
 
 for i in range( zp, zp-166, -1 ):
-    degree = getArmAngle( xp, yp, i );
+    degree = getArmAngle( xp, yp, i,'n',3 );
     f.write(",".join(str(d) for d in degree)+",\n");
     
 f.close();
-    
+
+pos = getArmPosition(2.605,-2.605,54.159,155.934,101.775,0.0);
+print(pos);
 '''
 xp = 300;
 zp = 270;
