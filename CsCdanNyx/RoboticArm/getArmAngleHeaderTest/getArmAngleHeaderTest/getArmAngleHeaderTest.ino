@@ -31,9 +31,9 @@ void setup() {
 	//Arm.armGoLine(220,   0, 195, speed);
 	//Arm.armGoLine(220,   0, 360, speed);
 
-	//Arm.armGoDirect(180, 0, 360, angSpeed);
-	//Serial.println("Revert!!");
-	//Arm.armGoDirect(220, 0, 360, angSpeed);
+	Arm.armGoDirect(180, 0, 360, angSpeed);
+	Serial.println("Revert!!");
+	Arm.armGoDirect(220, 0, 360, angSpeed);
 
 	Serial.println("End!!");
 

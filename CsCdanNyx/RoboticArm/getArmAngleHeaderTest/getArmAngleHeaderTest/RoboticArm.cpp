@@ -71,37 +71,21 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	Ang[1] = -Ang[0];
 
 	// Setting triangle () to calculate Ang[2], Ang[3]
-	float rx = xp - arm[0] * cos(Ang[1]);
-	float rz = zp - arm[3];
-	if (parallelToFloor)
-	{
-		rx -= delXP;
-		rz += delZP;
-	}
-	else
-	{
-		rx -= delX;
-		rz -= delZ;
-	}
+	float rx = xp - arm[4] * cos(arm4ToXYang + liftAngle) - arm[0] * cos(Ang[1]);
+	float rz = zp - arm[1] - arm[4] * sin(arm4ToXYang + liftAngle);
+	float r = sqrt(pow(rx, 2) + pow(rz, 2)); // The length of the line between the point J2-J4.
 
-	float r = sqrt(pow(rx, 2) + pow(rz, 2));
-	float theta = atan(rz / rx);
-	float a1 = r * cos(theta);
-	float b1 = acos((pow(r, 2) + pow(arm[1], 2) - pow(arm[2], 2)) / (2 * arm[1] * r));
-
-	Ang[2] = M_PI_2 - b1 - theta;
+	Ang[2] = M_PI_2 - ( acos((pow(r, 2) + pow(arm[1], 2) - pow(arm[2], 2)) / (2 * arm[1] * r)) ) - atan(rz / rx);
+	// J[2] = pi/2 - ( The angle between r and arm[2] ) - ( The angle between r and XY plane )
 
 	// AsinIndCheck prevent asin from calculation over 1, which turns out to be -nan(ind), specified for yp == 65.
-	float AsinIndCheck = (a1 - arm[1] * sin(Ang[2])) / arm[2];
+	float AsinIndCheck = (rx - arm[2] * sin(Ang[2])) / arm[3];
 	if (AsinIndCheck >= 1 && AsinIndCheck < 1.05)
 		AsinIndCheck = 0.99999;
 
 	Ang[3] = Ang[2] + M_PI_2 - asin(AsinIndCheck);
 
-	if (parallelToFloor)
-		Ang[4] = Ang[3] - Ang[2];
-	else
-		Ang[4] = Ang[3] - Ang[2] + M_PI / 3;
+	Ang[4] = Ang[3] - Ang[2] + liftAngle;
 
 	for (size_t i = 0; i < 6; i++)
 		Ang[i] = round(Ang[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
@@ -183,7 +167,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	getArmAngleDeg(xd, yd, zd, Ang);
 
 	//print
-	//printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
+	printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
 	//showXYZ();
 
 	for (size_t i = 0; i < 5; i++)
@@ -207,7 +191,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 		}
 
 		//print
-		//showJ();
+		showJ();
 	}
 	
 	for (size_t i = 0; i < 6; i++)
@@ -220,7 +204,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	this->z = zd;
 
 	//print
-	//showJ("Final J: ");
+	showJ("Final J: ");
 	//showXYZ("Final XYZ: ");
 }
 
