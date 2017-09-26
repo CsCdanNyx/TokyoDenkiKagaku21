@@ -79,15 +79,15 @@ class RoboticArmClass
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
-	float liftAngle = 0;							// Claw's lifting angle.
+	float liftAngle = 0;			// alpha		// Claw's lifting angle.
 	Servo servoAR[6];
 
 	
 	// Arm's constant settings(mm).
 	const float arm[5] = { 99, 134.2f, 159, 104.5f, 93.9875f };	// Arms' length.
 	//		    arm[5]: J0-J1, J1-J2, J2-J3, J3-J4, J4-XYZ.
-	const float delYc = 4.5f;									// The distance between J1 and Y on y-axis. 
-	const float arm4ToXYang = -0.214436f;						// The angle between arm[4] and X-Y parallel plane.
+	const float delYc = 4.5f;				// deltay			// The distance between J1 and Y on y-axis. 
+	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
 	
 };
 
