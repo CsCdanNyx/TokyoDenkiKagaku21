@@ -96,7 +96,7 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	Ang[4] = Ang[3] - Ang[2] + liftAngle;
 
 	// Rounding
-	for (size_t i = 0; i < 6; i++)
+	for (size_t i = 0; i < 5; i++)
 		Ang[i] = round(Ang[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
 
 	Ang[1] = -Ang[1];
@@ -104,29 +104,27 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	Ang[3] = -Ang[3];
 }
 
-void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
+// Still in process
+void RoboticArmClass::getArmPosition(float * Ang, float * XYZ)
 {
-	float vec[3] = { xd - x, yd - y, zd - z };
 
-	for (size_t i = 0; i < 3; i++)
-		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * speed;
-
-	while (x != xd || y != yd || z != zd)
-	{
-		getArmAngleDeg(x, y, z, J);
-
-		this->x += vec[0];
-		this->y += vec[1];
-		this->z += vec[2];
-	}
-	getArmAngleDeg(xd, yd, zd, J);
-	this->x = xd;
-	this->y = yd;
-	this->z = zd;
 }
 
 
 /*-------------------------------Actions--------------------------------------*/
+void RoboticArmClass::servoAct()
+{
+	for (int i = 0; i < 6; i++)
+	{
+		if (DegPrecision)
+			servoAR[i].writeMicroseconds(map((J[i] + initDegree[i]), 0, 180, 500, 2400));
+		else
+			servoAR[i].write(J[i] + initDegree[i]);
+	}
+	if (DELAY)
+		delay(DELAY);
+}
+/**-----------------------Arm--------------------------------**/
 void RoboticArmClass::armGoTo(float xp, float yp, float zp)
 {
 	getArmAngleDeg(xp, yp, zp, J);
@@ -154,7 +152,7 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 
 		//print
 		//showJ();
-		//showXYZ();
+		showXYZ();
 	}
 	armGoTo(xd, yd, zd);
 
@@ -164,12 +162,12 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 
 	//print
 	//showJ();
-	//showXYZ();
+	showXYZ();
 }
 
 void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 {
-	float Ang[6];
+	float Ang[5];
 	char sign[5] = { 1, 1, 1, 1, 1 };
 	float tmp;
 
@@ -177,7 +175,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 
 	//print
 	printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
-	//showXYZ();
+	showXYZ();
 
 	for (size_t i = 0; i < 5; i++)
 	{
@@ -200,10 +198,10 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 		}
 
 		//print
-		showJ();
+		//showJ();
 	}
 	
-	for (size_t i = 0; i < 6; i++)
+	for (size_t i = 0; i < 5; i++)
 		J[i] = Ang[i];
 
 	servoAct();
@@ -213,22 +211,61 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	this->z = zd;
 
 	//print
-	showJ("Final J: ");
-	//showXYZ("Final XYZ: ");
+	//showJ("Final J: ");
+	showXYZ("Final XYZ: ");
+}
+/**-----------------------Claw--------------------------------**/
+void RoboticArmClass::clawGrab(float * Ang, float tightenAng)
+{
+	///print
+	Serial.println("Grab!!");
+	Ang[5] = tightenAng;
+	servoAct();
 }
 
-void RoboticArmClass::servoAct()
+void RoboticArmClass::clawRelease(float * Ang, float releaseAng)
 {
-	for (int i = 0; i < 6; i++)
-	{
-		if (DegPrecision)
-			servoAR[i].writeMicroseconds(map((J[i] + initDegree[i]), 0, 180, 500, 2400));
-		else
-			servoAR[i].write(J[i] + initDegree[i]);
-	}
-	if (DELAY)
-		delay(DELAY);
+	///print
+	Serial.println("Release!!");
+	Ang[5] = releaseAng;
+	servoAct();
 }
+
+/*-------------------------------Challenge--------------------------------------*/
+/**------------------Grab Marker Pen-------------------------**/
+int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
+{
+	// Destination: x: penX, y: penY, z: penZ.
+	/* Arm moves to z, opens the claw and stretches forwoard, 
+	grabs the pen then arm goes straight up away from the cap.
+	Finally, arm moves to the initial writing position. */
+	float PenCapHeight = ( 3 + 2 ) * CM2UNIT;
+	armGoDirect(this->x, this->y, penZ + PenGrabHeight);
+	clawRelease(J);
+	
+	// Stretch!!!
+	Serial.println("Stretch!!");
+	
+	armGoLine(penX, penY, this->z);
+	clawGrab(J);
+	
+	// Take away!!
+	Serial.println("Take away!!");
+	
+	armGoLine(this->x, this->y, this->z + PenCapHeight);
+	
+	// Move to the intial point for writing, which is still uncertain.
+	float writeInitPoint[3] = { 300, 0, 300 };	// ?
+	armGoDirect(writeInitPoint[0], writeInitPoint[1], writeInitPoint[2]);
+	
+	Serial.println("Finish!!");
+
+	return 1;	// In case of slides or controller needs the return value.
+}
+
+/**----------------------Writing-----------------------------**/
+
+
 
 /*----------------------------Print and Show----------------------------------*/
 void RoboticArmClass::showJ(const char * title)
@@ -297,6 +334,7 @@ void RoboticArmClass::printOut(float n, const char * Hstring, const char * endSt
 	Serial.print(String(n, DegPrecision) + endString);
 }
 
+/**-----------Unused--------------*/
 /*
 void RoboticArmClass::Jzero()
 {
@@ -304,6 +342,27 @@ void RoboticArmClass::Jzero()
 		J[i] = 0;
 }
 */
+
+//void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
+//{
+//	float vec[3] = { xd - x, yd - y, zd - z };
+//
+//	for (size_t i = 0; i < 3; i++)
+//		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * speed;
+//
+//	while (x != xd || y != yd || z != zd)
+//	{
+//		getArmAngleDeg(x, y, z, J);
+//
+//		this->x += vec[0];
+//		this->y += vec[1];
+//		this->z += vec[2];
+//	}
+//	getArmAngleDeg(xd, yd, zd, J);
+//	this->x = xd;
+//	this->y = yd;
+//	this->z = zd;
+//}
 
 
 RoboticArmClass Arm;

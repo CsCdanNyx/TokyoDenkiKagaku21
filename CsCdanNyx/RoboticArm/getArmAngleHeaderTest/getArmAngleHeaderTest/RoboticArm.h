@@ -9,13 +9,11 @@
 	#include "WProgram.h"
 #endif
 
-// Some parameters could be set
-#define DegPrecision	1			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
-#define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 #define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
+// Pen
+#define PenGrabHeight 6 * CM2UNIT	
 
 // Arm's properties.
-
 
 // Servo's Pin settings
 #define servoPin0	2
@@ -24,6 +22,10 @@
 #define servoPin3	5
 #define servoPin4	6
 #define servoPin5	7
+
+// Some parameters could be set
+#define DegPrecision	1			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
+#define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 
 // For calculation.
 #define _USE_MATH_DEFINES
@@ -49,7 +51,9 @@ class RoboticArmClass
 
 	/*----------------------Angle & Path Calculations----------------------------*/
 	void getArmAngleDeg(float xp, float yp, float zp, float * Ang);
-	void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
+
+	void getArmPosition(float * Ang, float * XYZ);
+
 
 	//void adjPosition();				// Adjust position x, y, z value from Servos' angle J.
 	//bool isAngleFailed();				// Check if Servos' angle hit the limitations.
@@ -58,9 +62,22 @@ class RoboticArmClass
 
 	/*-------------------------------Actions--------------------------------------*/
 	void servoAct();													// Servos' signal output.
+	/**-----------------------Arm--------------------------------**/
 	void armGoTo(float xp, float yp, float zp);							// Arm move to point.
 	void armGoLine(float xd, float yd, float zd, float step = 1);			// Move to destination linearly.
 	void armGoDirect(float xd, float yd, float zd, float angSpeed = 1);		// Move to destination directly and angularly by changing angle per angSpeed degree.
+	/**-----------------------Claw--------------------------------**/
+	void clawGrab(float * Ang, float tightenAng = 135);
+	void clawRelease(float * Ang, float releaseAng = 90);
+
+	/*-------------------------------Challenge--------------------------------------*/
+	/**------------------Grab Marker Pen-------------------------**/
+	int GrabPen(float penX, float penY, float penZ);
+
+	/**----------------------Writing-----------------------------**/
+
+
+
 
 
 	/*----------------------------Print and Show----------------------------------*/
@@ -72,6 +89,7 @@ class RoboticArmClass
 
 	float * getJ();
 	float * getXYZ();
+	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
  private:
 
