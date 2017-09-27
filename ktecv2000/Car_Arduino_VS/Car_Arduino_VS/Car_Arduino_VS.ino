@@ -63,11 +63,11 @@ void setup()
 	// ------ serial set ------
 	Serial.begin(9600);
 	
+	/*
 	Serial.println("Distance? (cm)");
 	Serial.flush();
 	while (!Serial.available());
 	//Serial.println("!");
-	/*
 	String tmp = Serial.readString();
 	d = atoi(tmp.c_str());
 	printf_serial("Distance = %d, Start!\n", d);
@@ -76,10 +76,33 @@ void setup()
 
 void loop()
 {
+	// reach check point
+
+	// serial communication [board -> computer]
+	// form computer task started
+
+	// serial communication [computer -> board]
+	// send data(distance) back to board
+	Serial.flush();
+	while (!Serial.available());
+	delay(200);
+	String serial_data = Serial.readString();
+	printf_serial("=> %s\n=> At %d\n", serial_data.c_str(), serial_data.indexOf(","));
+
+	// decode data
+	int d_x, d_y;
+	int pos = serial_data.indexOf(",");
 	
-	/*
-	printf_serial("Over\n");
-	while (1)
-		car.halt();
-	*/
+	d_x = (int)serial_data.substring(0, pos).toFloat();
+	d_y = (int)serial_data.substring(pos+1).toFloat();
+
+	printf_serial("distance : (%d %d)\n", d_x, d_y);
+
+	// move car
+	car.wheel->move(d_x);
+	// move slider
+	
+	car.slider->setDir(SLIDER_DIR_V);
+	car.slider->move(d_y);
+	
 }

@@ -24,13 +24,16 @@
     <ClCompile Include="Serial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="knock_down.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MultiObjectTrackingBasedOnColor\multipleObjectTracking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiObjectTrackingBasedOnColor\Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="task1_knock_down.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

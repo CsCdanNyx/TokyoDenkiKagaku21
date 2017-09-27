@@ -57,7 +57,7 @@ class Wheel : public Car
 {
 public:
 	Wheel(PinSet &pin);
-	void move(int d = 0);
+	void move(int d);
 
 private:
 	void read_sensor();
@@ -78,13 +78,15 @@ private:
 	//static bool stop = false;
 };
 
+#define SLIDER_DIR_V 0
+#define SLIDER_DIR_H 1
 class Slider : public Car
 {
 public:
 	Slider(PinSet &pin);
 	void move(int d);		
-	void setDir(char dir);	// dir = 'V' (Vertical) or 'H' (Horizontal)
-	char getDir();
+	void setDir(uint8_t dir);	// dir = 'V' (Vertical) or 'H' (Horizontal)
+	uint8_t getDir();
 private:
 	void forward();
 	void backward();
@@ -93,6 +95,9 @@ private:
 
 	float speed_v = 4.87;		// cm/s
 	float speed_h = 16.65;		// cm/s
+
+	int d_v_total;
+	int d_h_total;
 };
 
 bool isCheckPoint(PinSet &pin);

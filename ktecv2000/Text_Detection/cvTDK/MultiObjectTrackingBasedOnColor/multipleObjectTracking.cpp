@@ -230,7 +230,7 @@ void trackFilteredObject(Object theObject,Mat threshold,Mat HSV, Mat &cameraFeed
 	
 }
 
-int main(int argc, char* argv[])
+int track_obj(int argc, char* argv[])
 {
 	//if we would like to calibrate our filter values, set to true.
 	bool calibrationMode = false;

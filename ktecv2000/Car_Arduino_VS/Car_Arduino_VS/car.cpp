@@ -1,6 +1,9 @@
 #include "car.h"
 #include "printf.h"
 #include <Timer1\TimerOne.h>
+
+#define DEFAULT_DISTANCE 99999
+
 static volatile unsigned long teeth = 0;
 static volatile unsigned long t = 0;
 
@@ -33,7 +36,7 @@ void Car::halt()
 	analogWrite(pin.MOT_2, MIN_PWM);
 }
 
-#ifdef __WHEEL__
+//#ifdef __WHEEL__
 Wheel::Wheel(PinSet &pin) : Car(pin)
 {
 	this->pin.WHEEL_OI = pin.WHEEL_OI;
@@ -45,9 +48,9 @@ Wheel::Wheel(PinSet &pin) : Car(pin)
 	pinMode(pin.ON_CHECK, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(pin.ON_CHECK), on_check_point, CHANGE);
 }
-void Wheel::move(int d = 0)
+void Wheel::move(int d = DEFAULT_DISTANCE)
 {
-	if (d)
+	if (d != DEFAULT_DISTANCE)
 	{
 		//teeth = _teeth = 0;
 		pinMode(pin.WHEEL_OI, INPUT);
@@ -199,19 +202,37 @@ void Wheel::on_check_point()
 	
 }
 */
-#endif 
+//#endif 
+
 Slider::Slider(PinSet &pin) : Car(pin)
 {
 
 }
-void Slider::move(int d)
+void Slider::move(int d = DEFAULT_DISTANCE)
 {
 	t = 0;
-	char dir = getDir();
+
+	// set direction
+	uint8_t dir = getDir();
 	Timer1.initialize(0.01 * 1000000);
 	Timer1.attachInterrupt(time_tick);
-	float speed = (dir == 'v' ? speed_v : speed_h);
-	if (d > 0)
+	
+	float speed;
+	if (dir == SLIDER_DIR_V)
+		speed = speed_v;
+	else if (dir == SLIDER_DIR_V)
+		speed = speed_h;
+
+	// check distance
+	if (d == DEFAULT_DISTANCE)
+	// **DANGEROOUS**  move whole distance of slider
+	{
+		if (dir == SLIDER_DIR_V)
+			d = d_v_total;
+		else if (dir == SLIDER_DIR_V)
+			d = d_h_total;
+	}
+	else if (d > 0)
 	{
 		forward();
 	}
@@ -220,6 +241,8 @@ void Slider::move(int d)
 		backward();
 		d = -d;
 	}
+
+	// to move
 	while (1)
 	{
 		if (t * 100 * speed >= d)
@@ -256,12 +279,12 @@ void Slider::backward()
 		digitalWrite(pin.MOT_2, MAX_PWM);
 	}
 }
-void Slider::setDir(char dir)
+void Slider::setDir(uint8_t dir)
 {
-	if(dir == 'V' || dir == 'H')
+	if(dir == SLIDER_DIR_V || dir == SLIDER_DIR_V)
 		_dir = dir;
 }
-char Slider::getDir()
+uint8_t Slider::getDir()
 {
 	return _dir;
 }

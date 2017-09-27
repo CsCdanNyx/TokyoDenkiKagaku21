@@ -44,7 +44,11 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int text_recong(Target &target) {
+Task::Task(int camera)
+{
+	setCamera(camera);
+}
+int Task::text_recong(cv::Mat src) {
 	std::vector<ContourWithData> allContoursWithData;           // declare empty vectors,
 	std::vector<ContourWithData> validContoursWithData;         // we will fill these shortly
 
@@ -86,7 +90,8 @@ int text_recong(Target &target) {
 
 	// test ///////////////////////////////////////////////////////////////////////////////
 	
-	cv::Mat pic = target.pic.clone();
+	cv::Mat pic = src.clone();
+	const char target = getTarget();
 	//cv::Mat pic = cv::imread(TRAIN_XML_PATH + "train_22.jpg");            // read in the test numbers image
 	
 	if (pic.empty()) {                                // if unable to open image
@@ -189,16 +194,19 @@ int text_recong(Target &target) {
 		cv::waitKey(0);
 		strFinalString = strFinalString + char(int(fltCurrentChar));        // append current char to full string
 		*/
-		if (target.digit == int(fltCurrentChar) - '0')
+		if (target == int(fltCurrentChar) - '0')
 		{
 			std::cout << "** detect ! **\n";
 			cv::rectangle(pic,                            // draw rectangle on original image
 				validContoursWithData[i].boundingRect,        // rect to draw
 				cv::Scalar(0, 255, 0),                        // green
 				2);                                           // thickness
-			target.center = cv::Point(validContoursWithData[i].boundingRect.x + validContoursWithData[i].boundingRect.width / 2,
+			
+			Object object;
+			object.center = cv::Point(validContoursWithData[i].boundingRect.x + validContoursWithData[i].boundingRect.width / 2,
 								  validContoursWithData[i].boundingRect.y + validContoursWithData[i].boundingRect.height / 2);
-			target.bound = validContoursWithData[i].boundingRect;
+			object.bound = validContoursWithData[i].boundingRect;
+			setObject(object);
 			break;
 		}
 	}
@@ -214,3 +222,27 @@ int text_recong(Target &target) {
 	return(0);
 }
 
+int Task::getCamera()
+{
+	return _camera;
+}
+void Task::setCamera(int camera)
+{
+	_camera = camera;
+}
+int Task::getTarget()
+{
+	return _target;
+}
+void Task::setTarget(char target)
+{
+	_target = target;
+}
+Task::Object Task::getObject()
+{
+	return _object;
+}
+void Task::setObject(Object object)
+{
+	_object = object;
+}
