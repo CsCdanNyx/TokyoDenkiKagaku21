@@ -5,12 +5,11 @@
 #include "RoboticArm.h"
 
 ///*----------------------------Arm's settings----------------------------------*/
-/*
-RoboticArmClass::RoboticArmClass()
-{
+//RoboticArmClass::RoboticArmClass()
+//{
+//
+//}
 
-}
-*/
 
 /*--------------------------Initializations----------------------------------*/
 void RoboticArmClass::init(float ix, float iy, float iz)
@@ -72,8 +71,8 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 
 
 	// Setting up triangle ( point: J2,J3,J4 which is arm[2],arm[3],r ) for calculating Ang[2], Ang[3]
-	float rx = xp - arm[4] * cos(arm4ToXYang + liftAngle) - arm[0] * cos(Ang[1]);
-	float rz = zp - arm[1] - arm[4] * sin(arm4ToXYang + liftAngle);
+	float rx = xp - arm[4] * cos(arm4ToXYang + tiltAngle) - arm[0] * cos(Ang[1]);
+	float rz = zp - arm[1] - arm[4] * sin(arm4ToXYang + tiltAngle);
 	float r = sqrt(pow(rx, 2) + pow(rz, 2)); // r is the line between the point J2-J4.
 
 	// Ang[2]
@@ -93,15 +92,15 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	Ang[3] = Ang[2] + M_PI_2 - asin(AsinIndCheck);
 
 	// Ang[4]
-	Ang[4] = Ang[3] - Ang[2] + liftAngle;
+	Ang[4] = Ang[3] - Ang[2] + tiltAngle;
 
 	// Rounding
 	for (size_t i = 0; i < 5; i++)
 		Ang[i] = round(Ang[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
 
 	Ang[1] = -Ang[1];
-	Ang[2] = -Ang[2];
-	Ang[3] = -Ang[3];
+	//Ang[2] = -Ang[2];
+	//Ang[3] = -Ang[3];
 }
 
 // Still in process
@@ -117,7 +116,7 @@ void RoboticArmClass::servoAct()
 	for (int i = 0; i < 6; i++)
 	{
 		if (DegPrecision)
-			servoAR[i].writeMicroseconds(map((J[i] + initDegree[i]), 0, 180, 500, 2400));
+			servoAR[i].writeMicroseconds(map(((J[i] + initDegree[i]) * pow(10, DegPrecision)), 0, (180 * pow(10, DegPrecision)), 500, 2400));
 		else
 			servoAR[i].write(J[i] + initDegree[i]);
 	}
@@ -140,7 +139,7 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 	float vec[3] = { xd - x, yd - y, zd - z };			// Vector point from src to destination.
 
 	for (size_t i = 0; i < 3; i++)						// Step vector calculation.
-		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * CM2UNIT/10;
+		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * CM2UNIT / 10;
 
 	while (x != xd || y != yd || z != zd)
 	{
@@ -200,7 +199,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 		//print
 		//showJ();
 	}
-	
+
 	for (size_t i = 0; i < 5; i++)
 		J[i] = Ang[i];
 
@@ -215,19 +214,21 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	showXYZ("Final XYZ: ");
 }
 /**-----------------------Claw--------------------------------**/
-void RoboticArmClass::clawGrab(float * Ang, float tightenAng)
+void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 {
-	///print
-	Serial.println("Grab!!");
-	Ang[5] = tightenAng;
-	servoAct();
-}
+	if (RelvClp == 'r')
+	{
+		///print
+		//Serial.println("Release!!");
+		Ang[5] = 90;
+	}
+	else
+	{
+		///print
+		//Serial.println("Clamp!!");
+		Ang[5] = 135;
+	}
 
-void RoboticArmClass::clawRelease(float * Ang, float releaseAng)
-{
-	///print
-	Serial.println("Release!!");
-	Ang[5] = releaseAng;
 	servoAct();
 }
 
@@ -241,13 +242,13 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
 	Finally, arm moves to the initial writing position. */
 	float PenCapHeight = ( 3 + 2 ) * CM2UNIT;
 	armGoDirect(this->x, this->y, penZ + PenGrabHeight);
-	clawRelease(J);
+	clawClamp(J, 'r');
 	
 	// Stretch!!!
 	Serial.println("Stretch!!");
 	
 	armGoLine(penX, penY, this->z);
-	clawGrab(J);
+	clawClamp(J, 'c');
 	
 	// Take away!!
 	Serial.println("Take away!!");
@@ -260,11 +261,19 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
 	
 	Serial.println("Finish!!");
 
-	return 1;	// In case of slides or controller needs the return value.
+	return 1;	// In case if slides or controller needs the returned value.
 }
 
 /**----------------------Writing-----------------------------**/
+void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
+{
+	if (UpvDn == 'u')
+		Ang[4] += penliftAng;
+	else
+		Ang[4] -= penliftAng;
 
+	servoAct();
+}
 
 
 /*----------------------------Print and Show----------------------------------*/
@@ -324,7 +333,7 @@ void RoboticArmClass::printOut(float * AR, size_t ARsize, const char * Hstring, 
 
 	for (size_t i = 0; i < ARsize-1; i++)
 		Serial.print(String(AR[i], DegPrecision) + split + " ");
-	Serial.print(String(AR[ARsize], DegPrecision) + "\n");
+	Serial.print(String(AR[ARsize-1], DegPrecision) + "\n");
 }
 
 void RoboticArmClass::printOut(float n, const char * Hstring, const char * endString)

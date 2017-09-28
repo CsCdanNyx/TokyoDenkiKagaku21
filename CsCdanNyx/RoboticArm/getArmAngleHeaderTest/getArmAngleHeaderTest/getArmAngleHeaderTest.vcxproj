@@ -82,10 +82,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Letters.h" />
     <ClInclude Include="RoboticArm.h" />
     <ClInclude Include="__vm\.getArmAngleHeaderTest.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Letters.cpp" />
     <ClCompile Include="RoboticArm.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
