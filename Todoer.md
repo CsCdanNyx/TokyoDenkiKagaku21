@@ -60,10 +60,10 @@ What do you want to do next ? Write it down !!
 - [ ] **Completely working**
 ### INTEGRATION
 - [X] Serial communication.
-- [X] Communication between computer(position, picture) and arduino(movement).
+- [X] Communication between computer and boards.
 - [ ] Execution can be reset to any task by pressing reset button and providing task number as input.   
-    - [ ] send reset signal to PC/board.   
-    - [ ] Reset signal could be understand by receivers, stop execution properly and wait for start signal.    
-    - [ ] Receivers stop execution properly (including record current task) and wait for restart signal.    
+    - [ ] send reset signal to PC/board.      
+    - [ ] Reset signal could be understand by receivers, stop execution properly and wait for start signal.       
+    - [ ] Receivers stop execution properly (including record current task) and wait for restart signal.       
 ## Chrislu30604
 
