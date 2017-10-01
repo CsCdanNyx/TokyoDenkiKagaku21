@@ -58,6 +58,13 @@ What do you want to do next ? Write it down !!
 - [ ] Feedback control by camera (cones' positions).
 - [ ] Communication between computer(position, vedio) and arduino(movement).
 - [ ] **Completely working**
+### *TASK_3* - WRITING
+- [ ] Grab pen.    
+    - [ ] depth sensor.    
+    - [ ] width : Adjust arm or wheels until depth sensor detected valid value (air/pen).    
+    - [ ] depth : Firstable, approximately move slider toward pen until an acceptable short distance has been detected. After width and height are adjusted, move accurately with depth sensor as input.     
+    - [ ] height : Fixed distance.    
+    
 ### INTEGRATION
 - [X] Serial communication.
 - [X] Communication between computer and boards.
