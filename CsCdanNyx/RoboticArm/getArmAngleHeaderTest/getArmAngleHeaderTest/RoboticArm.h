@@ -11,7 +11,7 @@
 
 #define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
-#define PenGrabHeight 6 * CM2UNIT	
+#define PenGrabHeight 7 * CM2UNIT	
 
 // Arm's properties.
 
@@ -24,7 +24,7 @@
 #define servoPin5	7
 
 // Some parameters could be set
-#define DegPrecision	1			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
+#define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 
 // For calculation.
@@ -64,8 +64,8 @@ class RoboticArmClass
 	void servoAct();													// Servos' signal output.
 	/**-----------------------Arm--------------------------------**/
 	void armGoTo(float xp, float yp, float zp);							// Arm move to point.
-	void armGoLine(float xd, float yd, float zd, float step = 1);			// Move to destination linearly.
-	void armGoDirect(float xd, float yd, float zd, float angSpeed = 1);		// Move to destination directly and angularly by changing angle per angSpeed degree.
+	void armGoLine(float xd, float yd, float zd, float step = 0.1);			// Move to destination linearly.
+	void armGoDirect(float xd, float yd, float zd, float angSpeed = 0.25);		// Move to destination directly and angularly by changing angle per angSpeed degree.
 	/**-----------------------Claw--------------------------------**/
 	void clawGrab(float * Ang, float tightenAng = 135);
 	void clawRelease(float * Ang, float releaseAng = 90);
@@ -93,7 +93,7 @@ class RoboticArmClass
 
  private:
 
-	float initDegree[6] = { 90, 90, 90, 90, 150 };
+	float initDegree[6] = { 90, 90, 90, 90, 130 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.

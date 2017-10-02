@@ -68,6 +68,8 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
     if not parallel:
         J[4] = J[3] - J[2] + math.pi/3;
     
+    J[1] = -J[1];
+    
     if DegreePrecision == 'n':
          return [ round(math.degrees(d)) for d in J ];
     else:
@@ -106,6 +108,11 @@ for yp in range(-70, 71):
     f.write(",".join(str(d) for d in degree)+", "+ str(yp) + "\n");
 f.close();
 ''' 
+xp = 300;
+yp = -70;
+zp = 220;
+degree = getArmAngle(xp, yp, zp, 'n',3);
+print(degree);
 
 xp = 300;
 yp = 0;
