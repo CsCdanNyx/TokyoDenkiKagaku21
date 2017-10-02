@@ -20,6 +20,8 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->y = iy;
 	this->z = iz;
 
+	this->penHold = false;
+
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
 	servoAR[2].attach(servoPin2, 500, 2400);
@@ -172,6 +174,10 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 
 	getArmAngleDeg(xd, yd, zd, Ang);
 
+	if (this->needPenlift)
+	{
+		Ang[5] -= this->penliftAng;
+	}
 	//print
 	printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
 	showXYZ();
@@ -213,6 +219,17 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	//showJ("Final J: ");
 	showXYZ("Final XYZ: ");
 }
+
+void RoboticArmClass::armGoLine(float desXYZ[3], float step)
+{
+	armGoLine(desXYZ[0], desXYZ[1], desXYZ[2], step);
+}
+
+void RoboticArmClass::armGoDirect(float desXYZ[3], float angSpeed)
+{
+	armGoDirect(desXYZ[0], desXYZ[1], desXYZ[2], angSpeed);
+}
+
 /**-----------------------Claw--------------------------------**/
 void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 {
@@ -232,48 +249,6 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 	servoAct();
 }
 
-/*-------------------------------Challenge--------------------------------------*/
-/**------------------Grab Marker Pen-------------------------**/
-int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
-{
-	// Destination: x: penX, y: penY, z: penZ.
-	/* Arm moves to z, opens the claw and stretches forwoard, 
-	grabs the pen then arm goes straight up away from the cap.
-	Finally, arm moves to the initial writing position. */
-	float PenCapHeight = ( 3 + 2 ) * CM2UNIT;
-	armGoDirect(this->x, this->y, penZ + PenGrabHeight);
-	clawClamp(J, 'r');
-	
-	// Stretch!!!
-	Serial.println("Stretch!!");
-	
-	armGoLine(penX, penY, this->z);
-	clawClamp(J, 'c');
-	
-	// Take away!!
-	Serial.println("Take away!!");
-	
-	armGoLine(this->x, this->y, this->z + PenCapHeight);
-	
-	// Move to the intial point for writing, which is still uncertain.
-	float writeInitPoint[3] = { 300, 0, 300 };	// ?
-	armGoDirect(writeInitPoint[0], writeInitPoint[1], writeInitPoint[2]);
-	
-	Serial.println("Finish!!");
-
-	return 1;	// In case if slides or controller needs the returned value.
-}
-
-/**----------------------Writing-----------------------------**/
-void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
-{
-	if (UpvDn == 'u')
-		Ang[4] += penliftAng;
-	else
-		Ang[4] -= penliftAng;
-
-	servoAct();
-}
 
 
 /*----------------------------Print and Show----------------------------------*/
@@ -372,6 +347,78 @@ void RoboticArmClass::Jzero()
 //	this->y = yd;
 //	this->z = zd;
 //}
+
+
+/*-------------------------------Challenge--------------------------------------*/
+/**------------------Grab Marker Pen-------------------------**/
+int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
+{
+	// Destination: x: penX, y: penY, z: penZ.
+	/* Arm moves to z, opens the claw and stretches forwoard,
+	grabs the pen then arm goes straight up away from the cap.
+	Finally, arm moves to the initial writing position. */
+	float PenCapHeight = (3 + 2) * CM2UNIT;
+	armGoDirect(this->x, this->y, penZ + PenGrabHeight);
+	clawClamp(J, 'r');
+
+	// Stretch!!!
+	Serial.println("Stretch!!");
+
+	armGoLine(penX, penY, this->z);
+	clawClamp(J, 'c');
+
+	// Take away!!
+	Serial.println("Take away!!");
+
+	armGoLine(this->x, this->y, this->z + PenCapHeight);
+
+	// Move to the intial point for writing, which is still uncertain.
+	float writeInitPoint[3] = { 300, 0, 300 };	// ?
+	armGoDirect(writeInitPoint[0], writeInitPoint[1], writeInitPoint[2]);
+
+	Serial.println("Finish!!");
+
+	return 1;	// In case if slides or controller needs the returned value.
+}
+
+/**----------------------Writing-----------------------------**/
+void RoboticArmClass::setPenLift(float * Ang, char UpvDn, float penAng)
+{
+	if (UpvDn == 'u')
+	{
+		this->penliftAng = penAng;
+		this->needPenlift = true;
+	}
+	else
+	{
+		this->penliftAng = -penAng;
+		this->needPenlift = false;
+	}
+}
+
+void RoboticArmClass::chooseWord(const String & TDKorNFU)
+{
+	Letters.setWord(TDKorNFU);
+}
+
+void RoboticArmClass::writeLetter(char clet, float LetOrigin[3], float tilt)
+{
+	armGoDirect(initPoint);
+	LiftPen(J, 'u');
+	Letters.initLetter(clet, tilt, LetOrigin);
+	armGoDirect(Letters.getLetPts());
+	LiftPen(J, 'd');
+	while (Letters.nextPoint())
+	{
+		armGoLine(Letters.getLetPts());
+		if (Letters.getLetLift() == 'u')
+		{	////Not yet finished, pen lifted status public(or private) var shold be added, and modified goline, godirect.
+			LiftPen(J, 'u');
+			armGoLine(Letters.getLetPts());
+			LiftPen(J, 'd');
+		}
+	}
+}
 
 
 RoboticArmClass Arm;

@@ -24,26 +24,30 @@
 #define servoPin5	7
 
 // Some parameters could be set
-#define STEPSPEED		0.25
-#define ANGULARSPEED	0.5
+#define STEPSPEED		0.25		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
+#define ANGULARSPEED	0.5			// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 
-// For calculation.
-#define _USE_MATH_DEFINES
-#define Rad2Degree 180/M_PI
 // For printing
 #define SIZEOF_ARRAY(array) (sizeof(array)/sizeof(*array))
 
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "Servo.h"
+#include "Letters.h"
+
+// For calculation.
+const float Rad2Degree = 180 / M_PI;
+
+float initPoint[3] = {300, 0, 300};
 
 class RoboticArmClass
 {
  public:
 	/*--------------------------Initializations----------------------------------*/
 	//RoboticArmClass();
-	void init(float ix = 220, float iy = 0, float iz = 360);
+	void init(float ix = 300, float iy = 0, float iz = 300);
 	
 	///// Debugging ///////////////////////////
 	void setJ(float * Ang);
@@ -68,16 +72,11 @@ class RoboticArmClass
 	void armGoTo(float xp, float yp, float zp);							// Arm move to point.
 	void armGoLine(float xd, float yd, float zd, float step = STEPSPEED);			// Move to destination linearly.
 	void armGoDirect(float xd, float yd, float zd, float angSpeed = ANGULARSPEED);		// Move to destination directly and angularly by changing angle per angSpeed degree.
-	/**-----------------------Claw--------------------------------**/
+	/***--------------------Overload---------------------***/
+	void armGoLine(float desXYZ[3], float step = STEPSPEED);			// Move to destination linearly.
+	void armGoDirect(float desXYZ[3], float angSpeed = ANGULARSPEED);					// Move to destination directly and angularly by changing angle per angSpeed degree.
+																						/**-----------------------Claw--------------------------------**/
 	void clawClamp(float * Ang, char RelvClp);		// Release or Clamp the clamp. RelvClp: 'r' for release, 'c' for clamp.
-
-	/*-------------------------------Challenge--------------------------------------*/
-	/**------------------Grab Marker Pen-------------------------**/
-	int GrabPen(float penX, float penY, float penZ);
-
-	/**----------------------Writing-----------------------------**/
-	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
-
 
 	/*----------------------------Print and Show----------------------------------*/
 	void showJ(const char * title = NULL);
@@ -90,13 +89,24 @@ class RoboticArmClass
 	float * getXYZ();
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
+
+	/*-------------------------------Challenge--------------------------------------*/
+	/**------------------Grab Marker Pen-------------------------**/
+	int GrabPen(float penX, float penY, float penZ);
+
+	/**----------------------Writing-----------------------------**/
+	void setPenLift(float * Ang, char UpvDn, float penAng);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
+	void chooseWord(const String& TDKorNFU);
+	void writeLetter(char clet, float LetOrigin[3], float tilt);
+
+
  private:
 
-	float initDegree[6] = { 90, 90, 90, 90, 150 };
-	float x = 0, y = 0, z = 0;						// Position coordinate.
+	float initDegree[6] = { 90, 90, 90, 90, 150 };	// Servos' initial degree.
+	float x = initPoint[0], y = initPoint[1], z = initPoint[2];						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
-	float tiltAngle = 0;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
+	float tiltAngle = 0 / Rad2Degree;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];
 
 	
@@ -106,6 +116,9 @@ class RoboticArmClass
 	const float delYc = 4.5f;				// deltay			// The distance between J1 and Y on y-axis. 
 	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
 
+	//-------Challenge settings
+	bool needPenlift = false;
+	float penliftAng = 20 / Rad2Degree;
 };
 
 extern RoboticArmClass Arm;
