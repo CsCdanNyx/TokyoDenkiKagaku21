@@ -245,6 +245,18 @@ void RoboticArmClass::clawRelease(float * Ang, float releaseAng)
 	servoAct();
 }
 
+void RoboticArmClass::claw(char c)
+{
+	if (c == 'g')
+	{
+		clawGrab(J);
+	}
+	else
+	{
+		clawRelease(J);
+	}
+}
+
 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
@@ -253,28 +265,28 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
 	/* Arm moves to z, opens the claw and stretches forwoard, 
 	grabs the pen then arm goes straight up away from the cap.
 	Finally, arm moves to the initial writing position. */
-	float PenCapHeight = ( 4.5 +0.5  ) * CM2UNIT;
-	armGoDirect(this->x, this->y, penZ + PenGrabHeight);
+	float PenCapHeight = ( 12 ) * CM2UNIT;
+    armGoDirect(this->x, this->y, penZ + PenGrabHeight,0.025f);
 	clawRelease(J, 90);
-	
-	// Stretch!!!
-	//Serial.println("Stretch!!");
-	
-	armGoLine(penX, penY, this->z);
+	//
+	//// Stretch!!!
+	Serial.println("Stretch!!");
+	//
+	armGoLine(penX, penY, this->z, 0.08f);
 	clawGrab(J, 135);
-	
-	// Take away!!
-	//Serial.println("Take away!!");
-	
-	armGoLine(this->x, this->y, this->z + PenCapHeight);
+	//
+	//// Take away!!
+	Serial.println("Take away!!");
+
+	armGoLine(this->x, this->y, this->z + PenCapHeight, 0.08f);
 	
 	//J[4] = 70;
 	//servoAct();
 	// Move to the intial point for writing, which is still uncertain.
 	//float writeInitPoint[3] = { 200, 0, 250 };	// ?
-	//armGoDirect(writeInitPoint[0], writeInitPoint[1], writeInitPoint[2]);
+	armGoDirect(280, 0,300,0.025f);
 	
-	//Serial.println("Finish!!");
+	Serial.println("Finish!!");
 
 	return 1;	// In case of slides or controller needs the return value.
 }

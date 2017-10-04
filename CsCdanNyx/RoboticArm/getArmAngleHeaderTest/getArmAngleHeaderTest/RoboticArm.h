@@ -9,7 +9,7 @@
 	#include "WProgram.h"
 #endif
 
-#define CM2UNIT	1					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
+#define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
 #define PenGrabHeight 7 * CM2UNIT	
 
@@ -68,8 +68,8 @@ class RoboticArmClass
 	void armGoDirect(float xd, float yd, float zd, float angSpeed = 0.25);		// Move to destination directly and angularly by changing angle per angSpeed degree.
 	/**-----------------------Claw--------------------------------**/
 	void clawGrab(float * Ang, float tightenAng = 135);
-	void clawRelease(float * Ang, float releaseAng = 90);
-
+	void clawRelease(float * Ang, float releaseAng = 60);
+	void claw(char c);
 	/*-------------------------------Challenge--------------------------------------*/
 	/**------------------Grab Marker Pen-------------------------**/
 	int GrabPen(float penX, float penY, float penZ);
