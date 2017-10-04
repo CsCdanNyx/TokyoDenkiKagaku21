@@ -9,7 +9,7 @@
 	#include "WProgram.h"
 #endif
 
-#define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
+#define CM2UNIT	1					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
 #define PenGrabHeight 7 * CM2UNIT	
 

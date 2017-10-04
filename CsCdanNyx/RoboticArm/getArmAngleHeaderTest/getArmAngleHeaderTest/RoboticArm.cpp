@@ -86,14 +86,14 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	float AsinIndCheck = (rx - arm[2] * sin(Ang[2])) / arm[3];
 	if (AsinIndCheck >= 1)
 	{
-		Serial.println(String("AsinIndCheck error, when") + " x:" + xp + " y:" + yp + " z:" + zp + " AsinIn..k:" + AsinIndCheck);
+		Serial.println(String("AsinIndCheck error, when") + " x:" + xp + " y:" + yp + " z:" + zp + " AsinIn..k:" + String(AsinIndCheck, 8));
 		AsinIndCheck = 0.99999;
 	}
 
-	Ang[3] = Ang[2] + M_PI_2 - asin(AsinIndCheck);
+	Ang[3] = -Ang[2] + M_PI_2 - asin(AsinIndCheck);
 
 	// Ang[4]
-	Ang[4] = Ang[3] - Ang[2] + liftAngle;
+	Ang[4] = -Ang[3] - Ang[2] + liftAngle;
 
 	// Rounding
 	for (size_t i = 0; i < 5; i++)
@@ -101,7 +101,7 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 
 	Ang[1] = -Ang[1];
 	Ang[2] = -Ang[2];
-	Ang[3] = -Ang[3];
+	Ang[3] = Ang[3];
 }
 
 // Still in process
@@ -188,8 +188,8 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	getArmAngleDeg(xd, yd, zd, Ang);
 
 	//print
-	//printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
-	//showXYZ();
+	printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
+	showXYZ();
 
 	for (size_t i = 0; i < 5; i++)
 	{

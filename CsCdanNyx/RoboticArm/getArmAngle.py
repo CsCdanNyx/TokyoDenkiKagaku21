@@ -108,9 +108,9 @@ for yp in range(-70, 71):
     f.write(",".join(str(d) for d in degree)+", "+ str(yp) + "\n");
 f.close();
 ''' 
-xp = 300;
-yp = -70;
-zp = 220;
+xp = 400;
+yp = 0;
+zp = 130;
 degree = getArmAngle(xp, yp, zp, 'n',3);
 print(degree);
 
