@@ -4,6 +4,9 @@
 
 #include "RoboticArm.h"
 
+
+static volatile boolean objectDetect = 0;
+
 ///*----------------------------Arm's settings----------------------------------*/
 /*
 RoboticArmClass::RoboticArmClass()
@@ -21,13 +24,16 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->y = iy;
 	this->z = iz;
 
+	pinMode(detect_optic, INPUT);
+
+	//pinMode(interruptPin, INPUT_PULLUP);
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
 	servoAR[2].attach(servoPin2, 500, 2400);
 	servoAR[3].attach(servoPin3, 500, 2400);
 	servoAR[4].attach(servoPin4, 500, 2400);
 	servoAR[5].attach(servoPin5, 500, 2400);
-
+	
 	armGoTo(x, y, z);
 }
 
@@ -134,7 +140,7 @@ void RoboticArmClass::armGoTo(float xp, float yp, float zp)
 	servoAct();
 
 	///print
-	//showJ();
+	showJ();
 	//showXYZ();
 }
 
@@ -259,42 +265,51 @@ void RoboticArmClass::claw(char c)
 
 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
-int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
+static void DetectDistance(void)
 {
-	// Destination: x: penX, y: penY, z: penZ.
-	/* Arm moves to z, opens the claw and stretches forwoard, 
-	grabs the pen then arm goes straight up away from the cap.
-	Finally, arm moves to the initial writing position. */
-	float PenCapHeight = ( 12 ) * CM2UNIT;
-    armGoDirect(this->x, this->y, penZ + PenGrabHeight,0.025f);
-	clawRelease(J, 90);
-	//
-	//// Stretch!!!
-	Serial.println("Stretch!!");
-	//
-	armGoLine(penX, penY, this->z, 0.08f);
-	clawGrab(J, 135);
-	//
-	//// Take away!!
-	Serial.println("Take away!!");
+	if (digitalRead(detect_optic))        // If detector Output is HIGH,
+	{
+		objectDetect = false;           // then no object was detected;
+	}
+	else                                // but if the Output is LOW,
+	{
+		delayMicroseconds(395);               // wait for another 15 pulses.
+		if (digitalRead(detect_optic))    // If the Output is now HIGH,
+		{                               // then first Read was noise
+			objectDetect = false;       // and no object was detected;
+		}
+		else                            // but if the Output is still LOW,
+		{
+			objectDetect = true;        // then an object was truly detected.
+		}
+	}
+}
 
-	armGoLine(this->x, this->y, this->z + PenCapHeight, 0.08f);
-	
-	//J[4] = 70;
-	//servoAct();
-	// Move to the intial point for writing, which is still uncertain.
-	//float writeInitPoint[3] = { 200, 0, 250 };	// ?
-	armGoDirect(280, 0,300,0.025f);
-	
-	Serial.println("Finish!!");
 
+
+int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
+{
+	int initxyz[3] = { x,y,z };
+	int liftPenHeight = 110;
+	Serial.println("Release");
+	claw('r');
+	armGoLine( (x + 50), penY, z, speed);
+	armGoLine(x, penY, penZ, speed);
+	armGoLine( penX, penY,  penZ, speed);                                       //GoToTheDestination
+
+	Timer1.attachInterrupt(DetectDistance, 210);
+	while (!objectDetect);
+	Timer1.detachInterrupt();
+
+	claw('g');
+	armGoLine(penX, penY, (penZ + liftPenHeight), speed);
+	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
 	return 1;	// In case of slides or controller needs the return value.
 }
 
+
 /**----------------------Writing-----------------------------**/
-
-
-
+  
 /*----------------------------Print and Show----------------------------------*/
 void RoboticArmClass::showJ(const char * title)
 {
@@ -394,3 +409,10 @@ void RoboticArmClass::Jzero()
 
 
 RoboticArmClass Arm;
+
+void interDelay(uint16_t del)
+{
+	cli();
+	delay(del);
+	sei();
+}

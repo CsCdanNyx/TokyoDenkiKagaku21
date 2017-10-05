@@ -42,7 +42,7 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
     
     J[2] = math.pi/2 - b1 - theta;
     
-    
+    print((a1 - 159 * math.sin(J[2]) ) / 104.5);
     if eq == 'n':
         J[3] = J[2] + math.pi/2 - math.asin( ( a1 - 159 * math.sin(J[2]) ) / 104.5 );
     else:
@@ -108,9 +108,9 @@ for yp in range(-70, 71):
     f.write(",".join(str(d) for d in degree)+", "+ str(yp) + "\n");
 f.close();
 ''' 
-xp = 400;
-yp = 0;
-zp = 130;
+xp = 300;
+yp = -80;
+zp = 220;
 degree = getArmAngle(xp, yp, zp, 'n',3);
 print(degree);
 

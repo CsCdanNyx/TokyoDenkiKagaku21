@@ -9,6 +9,8 @@
 	#include "WProgram.h"
 #endif
 
+#include <TimerOne.h>
+
 #define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
 #define PenGrabHeight 7 * CM2UNIT	
@@ -23,6 +25,9 @@
 #define servoPin4	6
 #define servoPin5	7
 
+// Interrupt Pin
+//#define interruptPin 8
+#define detect_optic 8
 // Some parameters could be set
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
@@ -41,7 +46,7 @@ class RoboticArmClass
  public:
 	/*--------------------------Initializations----------------------------------*/
 	//RoboticArmClass();
-	void init(float ix = 220, float iy = 0, float iz = 360);
+	void init(float ix = 300, float iy = 0, float iz = 300);
 	
 	///// Debugging ///////////////////////////
 	void setJ(float * Ang);
@@ -67,13 +72,12 @@ class RoboticArmClass
 	void armGoLine(float xd, float yd, float zd, float step = 0.1);			// Move to destination linearly.
 	void armGoDirect(float xd, float yd, float zd, float angSpeed = 0.25);		// Move to destination directly and angularly by changing angle per angSpeed degree.
 	/**-----------------------Claw--------------------------------**/
-	void clawGrab(float * Ang, float tightenAng = 135);
+	void clawGrab(float * Ang, float tightenAng = 130);
 	void clawRelease(float * Ang, float releaseAng = 60);
 	void claw(char c);
 	/*-------------------------------Challenge--------------------------------------*/
 	/**------------------Grab Marker Pen-------------------------**/
-	int GrabPen(float penX, float penY, float penZ);
-
+	int GrabPen(float penX, float penY, float penZ, float speed);
 	/**----------------------Writing-----------------------------**/
 
 
@@ -99,7 +103,6 @@ class RoboticArmClass
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
 	float liftAngle = 0;			// alpha		// Claw's lifting angle.
 	Servo servoAR[6];
-
 	
 	// Arm's constant settings(mm).
 	const float arm[5] = { 99, 134.2f, 159, 104.5f, 93.9875f };	// Arms' length.
@@ -108,6 +111,8 @@ class RoboticArmClass
 	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
 	
 };
+
+void interDelay(uint16_t del);
 
 extern RoboticArmClass Arm;
 
