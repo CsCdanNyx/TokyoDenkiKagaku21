@@ -53,8 +53,10 @@ void RoboticArmClass::servoDoJ()
 	for (int i = 0; i < 6; i++) {
 		servoAR[i].write(J[i]);
 	}
-	if (DELAY)
-		delay(DELAY);
+#if ServoDELAY
+	delay(ServoDELAY);
+#endif // ServoDELAY
+
 }
 
 ///////////////////////////////////////////
@@ -120,8 +122,12 @@ void RoboticArmClass::servoAct()
 		else
 			servoAR[i].write(J[i] + initDegree[i]);
 	}
-	if (DELAY)
-		delay(DELAY);
+
+#if ServoDELAY
+	delay(ServoDELAY);
+	Serial.println("DDDDD");
+#endif // ServoDELAY
+
 }
 /**-----------------------Arm--------------------------------**/
 void RoboticArmClass::armGoTo(float xp, float yp, float zp)

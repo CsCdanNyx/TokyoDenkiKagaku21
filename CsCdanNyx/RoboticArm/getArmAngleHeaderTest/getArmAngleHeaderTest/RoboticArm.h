@@ -27,7 +27,7 @@
 #define STEPSPEED		0.25
 #define ANGULARSPEED	0.5
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
-#define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
+#define ServoDELAY		0			// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 
 // For calculation.
 #define _USE_MATH_DEFINES
@@ -36,7 +36,8 @@
 #define SIZEOF_ARRAY(array) (sizeof(array)/sizeof(*array))
 
 #include <math.h>
-#include "Servo.h"
+//#include "Servo.h"
+#include <VarSpeedServo.h>
 
 class RoboticArmClass
 {
@@ -97,7 +98,7 @@ class RoboticArmClass
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
 	float tiltAngle = 0;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
-	Servo servoAR[6];
+	VarSpeedServo servoAR[6];
 
 	
 	// Arm's constant settings(mm).
