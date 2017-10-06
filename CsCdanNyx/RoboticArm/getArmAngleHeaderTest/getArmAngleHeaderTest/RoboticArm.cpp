@@ -295,10 +295,12 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 	claw('r');
 	armGoLine( (x + 50), penY, z, speed);
 	armGoLine(x, penY, penZ, speed);
-	armGoLine( penX, penY,  penZ, speed);                                       //GoToTheDestination
-
 	Timer1.attachInterrupt(DetectDistance, 210);
-	while (!objectDetect);
+
+	for (float count = (penX - x) / 100; count <= (penX - x); count = count + count) {
+		armGoLine((x + count), penY, penZ, speed);
+		if (objectDetect) break;
+	}
 	Timer1.detachInterrupt();
 
 	claw('g');
@@ -409,10 +411,3 @@ void RoboticArmClass::Jzero()
 
 
 RoboticArmClass Arm;
-
-void interDelay(uint16_t del)
-{
-	cli();
-	delay(del);
-	sei();
-}
