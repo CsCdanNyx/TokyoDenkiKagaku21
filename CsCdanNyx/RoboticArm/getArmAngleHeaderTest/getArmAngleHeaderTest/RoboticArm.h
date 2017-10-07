@@ -29,7 +29,8 @@
 //#define interruptPin 8
 #define detect_optic_Y 8
 #define detect_optic_X 9
-
+#define ENABLE_Y 10
+#define ENABLE_X 11
 // Some parameters could be set
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
@@ -82,6 +83,9 @@ class RoboticArmClass
 	/*-------------------------------Challenge--------------------------------------*/
 	/**------------------Grab Marker Pen-------------------------**/
 	int GrabPen(float penX, float penY, float penZ, float speed);
+
+	/**------------------Drop pen---------------------------------**/
+	int DropPen(float penX, float penY, float penZ, float speed);
 	/**----------------------Writing-----------------------------**/
 
 
@@ -101,7 +105,7 @@ class RoboticArmClass
 
  private:
 
-	float initDegree[6] = { 90, 90, 90, 90, 135 };
+	float initDegree[6] = { 90, 90, 90, 90, 132 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
@@ -118,7 +122,6 @@ class RoboticArmClass
 	//uint8_t detect_optic;
 };
 
-void interDelay(uint16_t del);
 
 extern RoboticArmClass Arm;
 

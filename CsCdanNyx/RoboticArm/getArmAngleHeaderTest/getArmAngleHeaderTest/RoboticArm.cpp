@@ -4,9 +4,6 @@
 
 #include "RoboticArm.h"
 
-
-static volatile boolean objectDetect = 0;
-uint8_t detect_optic;
 ///*----------------------------Arm's settings----------------------------------*/
 /*
 RoboticArmClass::RoboticArmClass()
@@ -25,7 +22,6 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->z = iz;
 
 	//pinMode(interruptPin, INPUT_PULLUP);
-	pinMode(10, OUTPUT); digitalWrite(10, HIGH);
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
 	servoAR[2].attach(servoPin2, 500, 2400);
@@ -266,8 +262,6 @@ void RoboticArmClass::claw(char c)
 
 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
-
-
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
 	int initxyz[3] = { x,y,z };
@@ -281,28 +275,51 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 	armGoLine(x, y, penZ, speed);
 	armGoLine(x, y + 60, z, speed);
 
+	pinMode(ENABLE_Y, OUTPUT);
+	digitalWrite(ENABLE_Y, HIGH);
 	pinMode(detect_optic_Y, INPUT);
-	/*Timer1.attachInterrupt(DetectDistance, 210);*/
-	for (float i = 0; i <= 120; i+=1) {
+	for (float i = 0; i <= 120; i+=2) {
 		armGoLine(x, y-1, z, speed);
 		boolean val = digitalRead(detect_optic_Y);
-		if (objectDetect) break;
+		if (val) {
+			break;
+			Serial.println("interruptY");
+		}
 	}
-	/*Timer1.detachInterrupt();*/
+	digitalWrite(ENABLE_Y, LOW);
+	val = true;
+
+	pinMode(ENABLE_X, OUTPUT);
+	digitalWrite(ENABLE_X ,HIGH);
 	pinMode(detect_optic_X, INPUT);
 	/*Timer1.attachInterrupt(, 210);*/
 	for (float  i = 0; i <= (penX - x); i = i + div){
 		armGoLine((x + div), y, penZ, speed);
 		boolean val = digitalRead(detect_optic_X);
-		if (objectDetect) break;
+		if (val) {
+			break;
+			Serial.println("interruptX");
+		}
 	}
 	/*Timer1.detachInterrupt();*/
-
+	digitalWrite(ENABLE_X, LOW);
 
 	claw('g');
 	armGoLine(x, y, (z + liftPenHeight), speed);
 	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
 	return 1;	// In case of slides or controller needs the return value.
+}
+
+/**------------------Drop Pen---------------------------------**/
+int RoboticArmClass::DropPen(float penX, float penY, float penZ, float speed) {
+	int initxyz[3] = { x,y,z };
+	
+	armGoLine((x + 50), y, z, speed);
+	armGoLine(x, y, penZ, speed);
+	armGoLine(penX, penY, z, speed);
+	Serial.println("Release");
+	claw('r');
+	armGoLine(initxyz[0], initxyz[1], initxyz[2], speed);
 }
 
 
