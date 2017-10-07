@@ -25,6 +25,7 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->z = iz;
 
 	//pinMode(interruptPin, INPUT_PULLUP);
+	pinMode(10, OUTPUT); digitalWrite(10, HIGH);
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
 	servoAR[2].attach(servoPin2, 500, 2400);
@@ -265,26 +266,6 @@ void RoboticArmClass::claw(char c)
 
 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
-static void DetectDistance(void)
-{
-	if (digitalRead(detect_optic))        // If detector Output is HIGH,
-	{
-		objectDetect = false;           // then no object was detected;
-	}
-	else                                // but if the Output is LOW,
-	{
-		delayMicroseconds(395);               // wait for another 15 pulses.
-		if (digitalRead(detect_optic))    // If the Output is now HIGH,
-		{                               // then first Read was noise
-			objectDetect = false;       // and no object was detected;
-		}
-		else                            // but if the Output is still LOW,
-		{
-			objectDetect = true;        // then an object was truly detected.
-		}
-	}
-}
-
 
 
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
@@ -292,36 +273,34 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 	int initxyz[3] = { x,y,z };
 	int liftPenHeight = 110;
 	float div = (penX - x) / 100;
+	boolean val = true;
 	Serial.println("Release");
 
 	claw('r');
 	armGoLine( (x + 50), y, z, speed);
-	armGoLine(x, y+50, penZ, speed);
+	armGoLine(x, y, penZ, speed);
+	armGoLine(x, y + 60, z, speed);
 
-	detect_optic = detect_optic_Y;
 	pinMode(detect_optic_Y, INPUT);
-	objectDetect = false;
 	/*Timer1.attachInterrupt(DetectDistance, 210);*/
-	for (float i = 0; i <= 100; i+=0.1) {
-		armGoLine(x, y-0.1, z, speed);
+	for (float i = 0; i <= 120; i+=1) {
+		armGoLine(x, y-1, z, speed);
+		boolean val = digitalRead(detect_optic_Y);
 		if (objectDetect) break;
 	}
 	/*Timer1.detachInterrupt();*/
-
-
-	objectDetect = false;
-	detect_optic = detect_optic_X;
 	pinMode(detect_optic_X, INPUT);
-	/*Timer1.attachInterrupt(DetectDistance, 210);*/
+	/*Timer1.attachInterrupt(, 210);*/
 	for (float  i = 0; i <= (penX - x); i = i + div){
 		armGoLine((x + div), y, penZ, speed);
+		boolean val = digitalRead(detect_optic_X);
 		if (objectDetect) break;
 	}
 	/*Timer1.detachInterrupt();*/
 
 
 	claw('g');
-	armGoLine(penX, y, (z + liftPenHeight), speed);
+	armGoLine(x, y, (z + liftPenHeight), speed);
 	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
 	return 1;	// In case of slides or controller needs the return value.
 }
