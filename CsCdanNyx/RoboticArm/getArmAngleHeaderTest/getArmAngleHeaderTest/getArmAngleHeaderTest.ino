@@ -18,7 +18,8 @@ void setup() {
 
 	Serial.flush();					// Flush Arduino Serial output.
 	while (!Serial.available());	// Start looping after Serial port input.
-	Arm.GrabPen(420, 0, 110, speed); //input final Destination for arm to Grab Pen
+	//Arm.armGoLine(301, 1, 300.5, speed);
+	Arm.GrabPen(430, 0, 110, speed); //input final Destination for arm to Grab Pen
 	
 
 }

@@ -6,7 +6,7 @@
 
 
 static volatile boolean objectDetect = 0;
-
+uint8_t detect_optic;
 ///*----------------------------Arm's settings----------------------------------*/
 /*
 RoboticArmClass::RoboticArmClass()
@@ -23,8 +23,6 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->x = ix;
 	this->y = iy;
 	this->z = iz;
-
-	pinMode(detect_optic, INPUT);
 
 	//pinMode(interruptPin, INPUT_PULLUP);
 	servoAR[0].attach(servoPin0, 500, 2400);
@@ -116,7 +114,6 @@ void RoboticArmClass::getArmPosition(float * Ang, float * XYZ)
 
 }
 
-
 /*-------------------------------Actions--------------------------------------*/
 void RoboticArmClass::servoAct()
 {
@@ -140,7 +137,7 @@ void RoboticArmClass::armGoTo(float xp, float yp, float zp)
 	servoAct();
 
 	///print
-	showJ();
+	//showJ();
 	//showXYZ();
 }
 
@@ -151,18 +148,21 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 	for (size_t i = 0; i < 3; i++)						// Step vector calculation.
 		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * CM2UNIT/10;
 
+	float countNum = fmax((xd - x) / vec[0], (zd -z) / vec[2]);
+	int count = 0;
+
 	while (x != xd || y !=yd || z !=zd)
 	{
 		armGoTo(x, y, z);
-		if (abs(x - xd) >= 0.5)
+		if (abs(x - xd) > 0.5)
 			this->x += vec[0];
 		else
 			this->x = xd;
-		if (abs(y - yd) >= 0.5)
+		if (abs(y - yd) > 0.5)
 			this->y += vec[1];
 		else
 			this->y = yd;
-		if (abs(z - zd) >= 0.5)
+		if (abs(z - zd) > 0.5)
 			this->z += vec[2];
 		else
 			this->z = zd;
@@ -291,20 +291,37 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
 	int initxyz[3] = { x,y,z };
 	int liftPenHeight = 110;
+	float div = (penX - x) / 100;
 	Serial.println("Release");
-	claw('r');
-	armGoLine( (x + 50), penY, z, speed);
-	armGoLine(x, penY, penZ, speed);
-	Timer1.attachInterrupt(DetectDistance, 210);
 
-	for (float count = (penX - x) / 100; count <= (penX - x); count = count + count) {
-		armGoLine((x + count), penY, penZ, speed);
+	claw('r');
+	armGoLine( (x + 50), y, z, speed);
+	armGoLine(x, y+50, penZ, speed);
+
+	detect_optic = detect_optic_Y;
+	pinMode(detect_optic_Y, INPUT);
+	objectDetect = false;
+	/*Timer1.attachInterrupt(DetectDistance, 210);*/
+	for (float i = 0; i <= 100; i+=0.1) {
+		armGoLine(x, y-0.1, z, speed);
 		if (objectDetect) break;
 	}
-	Timer1.detachInterrupt();
+	/*Timer1.detachInterrupt();*/
+
+
+	objectDetect = false;
+	detect_optic = detect_optic_X;
+	pinMode(detect_optic_X, INPUT);
+	/*Timer1.attachInterrupt(DetectDistance, 210);*/
+	for (float  i = 0; i <= (penX - x); i = i + div){
+		armGoLine((x + div), y, penZ, speed);
+		if (objectDetect) break;
+	}
+	/*Timer1.detachInterrupt();*/
+
 
 	claw('g');
-	armGoLine(penX, penY, (penZ + liftPenHeight), speed);
+	armGoLine(penX, y, (z + liftPenHeight), speed);
 	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
 	return 1;	// In case of slides or controller needs the return value.
 }

@@ -27,7 +27,9 @@
 
 // Interrupt Pin
 //#define interruptPin 8
-#define detect_optic 8
+#define detect_optic_X 8
+#define detect_optic_Y 9
+
 // Some parameters could be set
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
@@ -40,6 +42,8 @@
 
 #include <math.h>
 #include "Servo.h"
+
+//extern uint8_t detect_optic;
 
 class RoboticArmClass
 {
@@ -110,6 +114,8 @@ class RoboticArmClass
 	const float delYc = 4.5f;				// deltay			// The distance between J1 and Y on y-axis. 
 	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
 	
+	//grab pen
+	//uint8_t detect_optic;
 };
 
 void interDelay(uint16_t del);
