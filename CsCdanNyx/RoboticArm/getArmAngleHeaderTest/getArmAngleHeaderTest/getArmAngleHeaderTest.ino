@@ -38,9 +38,10 @@ void setup() {
 	while (!Serial.available());	// Start looping after Serial port input.
 
 	//Arm.armGoLine(301, 1, 300.5, speed);
-	Arm.GrabPen(450, 0, 110, speed); //input final Destination for arm to Grab Pen
+	Arm.GrabPen(430, 0, 200, speed); //input final Destination for arm to Grab Pen
 	//Arm.DropPen(400, 0,110, speed);
 
+	Serial.println("End setup!!");
 }
 
 // the loop function runs over and over again until power down or reset

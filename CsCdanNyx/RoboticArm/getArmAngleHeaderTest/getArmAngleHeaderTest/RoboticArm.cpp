@@ -246,55 +246,94 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 /**------------------Grab Marker Pen-------------------------**/
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
-	int initxyz[3] = { x,y,z };
-	int liftPenHeight = 110;
-	float div = (penX - x) / 300;
-	bool val = true;
+	int initxyz[3] = { this->x,this->y,this->z };
+	int liftPenHeight = 80;
+	float offsetY = 20;
+	float offsetX = 8;
+	float GrabPtUpperBoundfromEnd = 5;
+	bool notDetected = true;		// Check if optic detection detect pen. If detected, return false.
 	Serial.println("Release");
 	clawClamp(J,'r');
-	armGoLine( x , y, z, speed);
-	armGoLine(x, y, penZ, speed);
-	armGoLine(x, (y + 70), z, speed);
 
-	pinMode(ENABLE_Y, OUTPUT);
-	digitalWrite(ENABLE_Y, HIGH);
-	pinMode(detect_optic_Y, INPUT);
+	// Initial position for optic detection
+	armGoLine(this->x, this->y, this->z, speed);
+	armGoLine(this->x, this->y, penZ + 10, speed);
+	armGoLine(this->x, (this->y + 70), this->z, speed);
+
+	// Detect pen alone y-axis
+	pinMode(OPTIC_ENABLE_Y_PIN, OUTPUT);
+	digitalWrite(OPTIC_ENABLE_Y_PIN, HIGH);
+	pinMode(OPTIC_Y_INPUT_PIN, INPUT);
 	delay(500);
-	for (float i = 0; i <= 140; i+=0.5) {
-		armGoLine(x, y-0.5, z, speed);
-		val = digitalRead(detect_optic_Y);
-		if (!val) {
+	for (float i = 0; i <= 140; i += 0.5)
+	{
+		armGoLine(this->x, this->y - 0.5, this->z, speed);
+		notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+		if (!notDetected) {
 			delay(1000);
-			val = digitalRead(detect_optic_Y);
-			if ((!val)) {
-				Serial.println("interruptY");
-				armGoLine(x, y - 10, z, speed);
+			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+			if (!notDetected)
+			{
+				//Serial.println("interruptY");
 				break;
 			}
 		}
 	}
-	digitalWrite(ENABLE_Y, LOW);
+	//digitalWrite(OPTIC_ENABLE_Y_PIN, LOW);
 
-	val = true;
+	//showJ("InY:\t");
 
-	pinMode(ENABLE_X, OUTPUT);
-	digitalWrite(ENABLE_X ,HIGH);
-	pinMode(detect_optic_X, INPUT);
+	// Detect the end of the pen alone z-axis
+	delay(500);
+	for (size_t i = 0; i <= 200; i++)
+	{
+		Serial.println(this->z);
+		armGoLine(this->x, this->y, this->z + 0.5, 0.09f);
+		notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+		//Serial.println(notDetected?"not":"yes");
+		if (notDetected) {
+			delay(1000);
+			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+			if (notDetected)
+			{
+				//Serial.println("End of the Pen at Z.");
+				//showJ("EndZ:\t");
+				armGoLine(this->x, this->y, this->z - 0.5 - GrabPtUpperBoundfromEnd, 0.09f);
+				break;
+			}
+		}
+	}
+	
+	digitalWrite(OPTIC_ENABLE_Y_PIN, LOW);
+
+	//showJ("CatchZ:\t");
+
+	armGoLine(this->x, this->y + offsetY, this->z, speed / 2);		// y offset between detector and clamp.
+
+	//showJ("CatchY:\t");
+
+	notDetected = true;
+	// Detect pen alone x-axis
+	pinMode(OPTIC_ENABLE_X_PIN, OUTPUT);
+	digitalWrite(OPTIC_ENABLE_X_PIN, HIGH);
+	pinMode(OPTIC_X_INPUT_PIN, INPUT);
 	delay(1000);
-	for (float  i = 0; i <= (penX - x); i = i + div){
-		armGoLine((x + div), y, penZ, speed);
-		val = digitalRead(detect_optic_X);
-		if (!val) {
-			Serial.println("interruptX");
-			//armGoLine((x +30), y, penZ, speed);
+
+	for (float i = 0; i <= 600; i++)
+	{
+		armGoLine((this->x + 0.2), this->y, this->z, speed / 2);
+		notDetected = digitalRead(OPTIC_X_INPUT_PIN);
+		if (!notDetected)
+		{
+			//Serial.println("interruptX");
+			armGoLine((this->x + offsetX), this->y, this->z, speed / 2);
 			break;
 		}
 	}
-	/*Timer1.detachInterrupt();*/
-	digitalWrite(ENABLE_X, LOW);
+	digitalWrite(OPTIC_ENABLE_X_PIN, LOW);
 
 	clawClamp(J, 'g');
-	armGoLine(this->x, this->y, (z + liftPenHeight), speed);
+	armGoLine(this->x, this->y, (this->z + liftPenHeight), speed);
 	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
 	return 1;	// In case of slides or controller needs the return value.
 }
