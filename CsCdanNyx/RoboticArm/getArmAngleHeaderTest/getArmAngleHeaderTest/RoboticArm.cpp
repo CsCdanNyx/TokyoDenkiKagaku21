@@ -250,38 +250,42 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
 	int initxyz[3] = { x,y,z };
 	int liftPenHeight = 110;
-	float div = (penX - x) / 100;
+	float div = (penX - x) / 200;
 	bool val = true;
 	Serial.println("Release");
 	clawClamp(J,'r');
 	armGoLine( (x + 50), y, z, speed);
 	armGoLine(x, y, penZ, speed);
-	armGoLine(x, y + 60, z, speed);
+	armGoLine(x, (y + 60), z, speed);
 
 	pinMode(ENABLE_Y, OUTPUT);
 	digitalWrite(ENABLE_Y, HIGH);
 	pinMode(detect_optic_Y, INPUT);
-	for (float i = 0; i <= 120; i+=2) {
-		armGoLine(x, y-1, z, speed);
-		boolean val = digitalRead(detect_optic_Y);
-		if (val) {
-			break;
+	delay(500);
+	for (float i = 0; i <= 120; i+=0.05) {
+		armGoLine(x, y-0.05, z, speed);
+		val = digitalRead(detect_optic_Y);
+		if (!val) {
 			Serial.println("interruptY");
+			break;
 		}
 	}
 	digitalWrite(ENABLE_Y, LOW);
+
 	val = true;
 
 	pinMode(ENABLE_X, OUTPUT);
 	digitalWrite(ENABLE_X ,HIGH);
 	pinMode(detect_optic_X, INPUT);
+	delay(500);
 	/*Timer1.attachInterrupt(, 210);*/
 	for (float  i = 0; i <= (penX - x); i = i + div){
 		armGoLine((x + div), y, penZ, speed);
-		boolean val = digitalRead(detect_optic_X);
-		if (val) {
-			break;
+		val = digitalRead(detect_optic_X);
+		if (!val) {
 			Serial.println("interruptX");
+			armGoLine((x + 20), y, penZ, speed);
+			break;
 		}
 	}
 	/*Timer1.detachInterrupt();*/

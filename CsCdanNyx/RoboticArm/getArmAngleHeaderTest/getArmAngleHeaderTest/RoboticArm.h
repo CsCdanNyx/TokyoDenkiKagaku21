@@ -27,8 +27,8 @@
 
 // Interrupt Pin
 //#define interruptPin 8
-#define detect_optic_Y 8
-#define detect_optic_X 9
+const uint8_t detect_optic_Y  = 8;
+const uint8_t detect_optic_X  = 9;
 #define ENABLE_Y 10
 #define ENABLE_X 11
 // Some parameters could be set
@@ -102,7 +102,7 @@ class RoboticArmClass
 
  private:
 
-	float initDegree[6] = { 90, 90, 90, 90, 132 };
+	float initDegree[6] = { 93, 87, 90, 90, 133 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
