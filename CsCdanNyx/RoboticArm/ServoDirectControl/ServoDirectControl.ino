@@ -2,10 +2,12 @@
 Servo servo1, servo2, servo3, servo4, servo5, servo6, servo7;
 void setup()
 {
+  Serial.begin(9600);
+  Serial.println("Hello");
   //**********************initialize servo*****************
 //   servo1.attach(2,500,2400);
-//   servo2.attach(3,500,2400);
-   servo3.attach(4,500,2400);
+   servo2.attach(3,500,2400);
+//   servo3.attach(4,500,2400);
 //   servo4.attach(5,500,2400);
 //   servo5.attach(6,500,2400);
 //   servo6.attach(7,500,2400);
@@ -13,12 +15,11 @@ void setup()
    
    
 //   servo1.write(90);  delay(15);
-//   servo2.write(90);  delay(15);
-   servo3.write(90); delay(15);
+   servo2.write(90);  delay(15);
+//   servo3.write(90); delay(15);
 //   servo4.write(90); delay(15);
 //   servo5.write(130);  delay(15);
 //   servo6.write(90); delay(15);
-   Serial.begin(9600); 
    Serial.print("Enter the angle : ");
 }
 
@@ -39,7 +40,7 @@ void loop()
       
     }
    Serial.println(integerValue);
-   servo3.write(integerValue);
+   servo2.write(integerValue);
   }
   
 }
