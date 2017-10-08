@@ -16,10 +16,6 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 {	
 	Serial.println("//----Start Initiallization----//");
 
-	this->x = ix;
-	this->y = iy;
-	this->z = iz;
-
 	//pinMode(interruptPin, INPUT_PULLUP);
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
@@ -27,7 +23,11 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	servoAR[3].attach(servoPin3, 500, 2400);
 	servoAR[4].attach(servoPin4, 500, 2400);
 	servoAR[5].attach(servoPin5, 500, 2400);
-	
+
+	this->x = ix;
+	this->y = iy;
+	this->z = iz;
+
 	armGoTo(x, y, z);
 }
 
@@ -70,16 +70,15 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	Ang[0] = asin((delYc + yp) / arm[0]);
 	Ang[1] = -Ang[0];
 
-
 	// Setting up triangle ( point: J2,J3,J4 which is arm[2],arm[3],r ) for calculating Ang[2], Ang[3]
 	float rx = xp - arm[4] * cos(arm4ToXYang + tiltAngle) - arm[0] * cos(Ang[1]);
 	float rz = zp - arm[1] - arm[4] * sin(arm4ToXYang + tiltAngle);
 	float r = sqrt(pow(rx, 2) + pow(rz, 2)); // r is the line between the point J2-J4.
-
+	/*check if r <= all arm*/
+	//if (r < (arm[2] + arm[3])) r = 262;
 	// Ang[2]
-	Ang[2] = M_PI_2 - ( acos((pow(r, 2) + pow(arm[2], 2) - pow(arm[3], 2)) / (2 * arm[2]* r)) ) - atan(rz / rx);
+	Ang[2] = M_PI_2 - (acos((pow(r, 2) + pow(arm[2], 2) - pow(arm[3], 2)) / (2 * arm[2] * r))) - atan(rz / rx);
 	// J[2] = pi/2 - ( The angle between r and arm[2] ) - ( The angle between r and XY plane )
-
 
 	// Ang[3]
 	// AsinIndCheck prevent asin from calculation over 1, which turns out to be -nan(ind), specified for yp == 65.
@@ -148,19 +147,18 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 	while (x != xd || y !=yd || z !=zd)
 	{
 		armGoTo(x, y, z);
-		if (abs(x - xd) > 0.5)
+		if (abs(x - xd) >= 1)
 			this->x += vec[0];
 		else
 			this->x = xd;
-		if (abs(y - yd) > 0.5)
+		if (abs(y - yd) >= 1)
 			this->y += vec[1];
 		else
 			this->y = yd;
-		if (abs(z - zd) > 0.5)
+		if (abs(z - zd) >=1)
 			this->z += vec[2];
 		else
 			this->z = zd;
-
 		//print
 		//showJ();
 		//showXYZ();
@@ -232,13 +230,13 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 	{
 		///print
 		//Serial.println("Release!!");
-		Ang[5] = 90;
+		Ang[5] = 0;
 	}
 	else
 	{
 		///print
 		//Serial.println("Clamp!!");
-		Ang[5] = 130;
+		Ang[5] = 50;
 	}
 
 	servoAct();
@@ -250,24 +248,29 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
 	int initxyz[3] = { x,y,z };
 	int liftPenHeight = 110;
-	float div = (penX - x) / 200;
+	float div = (penX - x) / 300;
 	bool val = true;
 	Serial.println("Release");
 	clawClamp(J,'r');
-	armGoLine( (x + 50), y, z, speed);
+	armGoLine( x , y, z, speed);
 	armGoLine(x, y, penZ, speed);
-	armGoLine(x, (y + 60), z, speed);
+	armGoLine(x, (y + 70), z, speed);
 
 	pinMode(ENABLE_Y, OUTPUT);
 	digitalWrite(ENABLE_Y, HIGH);
 	pinMode(detect_optic_Y, INPUT);
 	delay(500);
-	for (float i = 0; i <= 120; i+=0.05) {
-		armGoLine(x, y-0.05, z, speed);
+	for (float i = 0; i <= 140; i+=0.5) {
+		armGoLine(x, y-0.5, z, speed);
 		val = digitalRead(detect_optic_Y);
 		if (!val) {
-			Serial.println("interruptY");
-			break;
+			delay(1000);
+			val = digitalRead(detect_optic_Y);
+			if ((!val)) {
+				Serial.println("interruptY");
+				armGoLine(x, y - 10, z, speed);
+				break;
+			}
 		}
 	}
 	digitalWrite(ENABLE_Y, LOW);
@@ -277,14 +280,13 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 	pinMode(ENABLE_X, OUTPUT);
 	digitalWrite(ENABLE_X ,HIGH);
 	pinMode(detect_optic_X, INPUT);
-	delay(500);
-	/*Timer1.attachInterrupt(, 210);*/
+	delay(1000);
 	for (float  i = 0; i <= (penX - x); i = i + div){
 		armGoLine((x + div), y, penZ, speed);
 		val = digitalRead(detect_optic_X);
 		if (!val) {
 			Serial.println("interruptX");
-			armGoLine((x + 20), y, penZ, speed);
+			//armGoLine((x +30), y, penZ, speed);
 			break;
 		}
 	}
@@ -300,10 +302,9 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 /**------------------Drop Pen---------------------------------**/
 int RoboticArmClass::DropPen(float penX, float penY, float penZ, float speed) {
 	int initxyz[3] = { x,y,z };
-	
 	armGoLine((x + 50), y, z, speed);
 	armGoLine(x, y, penZ, speed);
-	armGoLine(penX, penY, z, speed);
+	armGoLine(penX, y, z, speed);
 	Serial.println("Release");
 	clawClamp(J, 'r');
 	armGoLine(initxyz[0], initxyz[1], initxyz[2], speed);
