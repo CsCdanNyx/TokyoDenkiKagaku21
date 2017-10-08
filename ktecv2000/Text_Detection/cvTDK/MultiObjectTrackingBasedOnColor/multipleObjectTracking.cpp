@@ -230,7 +230,7 @@ void trackFilteredObject(Object theObject,Mat threshold,Mat HSV, Mat &cameraFeed
 	
 }
 
-int track_obj(int argc, char* argv[])
+int track_obj()
 {
 	//if we would like to calibrate our filter values, set to true.
 	bool calibrationMode = false;
@@ -260,7 +260,7 @@ int track_obj(int argc, char* argv[])
 	waitKey(1000);
 	*/
 
-	Mat _cameraFeed = imread("E:\\class\\TDK\\cvTDK\\x64\\Debug\\cone\\cone04.jpg");
+	Mat _cameraFeed = imread("E:\\class\\TDK\\cvTDK\\x64\\Debug\\cone\\cone02.jpg");
 	while(1)
 	
 	{

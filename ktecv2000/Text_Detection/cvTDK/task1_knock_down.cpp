@@ -15,12 +15,8 @@ Task1::Task1(int camera) : Task(camera)
 }
 void Task1::execute()
 {
-	char target;
-	std::cout << "Target?\n";
-	std::cin >> target;
-	
-	setTarget(target);
-
+	/// target detection
+	std::cout << "Camera => " << getCamera() << "\n";
 	cv::VideoCapture video(getCamera());
 	if (!video.isOpened()) {
 		std::cout << "Camera error\n";
@@ -29,9 +25,20 @@ void Task1::execute()
 	Sleep(500);
 	cv::Mat pic;
 	video >> pic;
-	//std::cout << "Pic size : " << target.pic.size() << "  " << target.pic.cols << "," << target.pic.rows << "\n";
-	text_recong(pic);
-	//std::cout << "center coordinate of digit : " << target.center.x << "," << target.center.y << "\n";
+	if (getTarget())
+	{
+		text_recong(pic);
+	}
+	else
+	{
+		std::cout << "-------------------\n";
+		while(!getTarget())
+			text_recong(pic);
+		std::cout << "-------------------\n";
+		return;
+	}
+	
+	/// calculate moving distance
 	Object object = getObject();
 
 	float prop_x = digit_2_w / float(object.bound.width);
@@ -39,13 +46,14 @@ void Task1::execute()
 
 	std::cout << "propotion : " << prop_x << "," << prop_y << "\n";
 
-	float arm_x_dis = (object.center.x - (pic.cols / 2)) * prop_x * 100;
-	float arm_y_dis = (object.center.y - (pic.rows / 2)) * prop_y * -1 * 100;
+	int arm_x_dis = (int)((object.center.x - (pic.cols / 2)) * prop_x * 100);
+	int arm_y_dis = (int)((object.center.y - (pic.rows / 2)) * prop_y * -1 * 100);
 	std::cout << "@ the distance from center : " << arm_x_dis << "," << arm_y_dis << "\n";
-	std::string arm_xy_serial = std::to_string(prop_x).substr(0, 6) + "," + std::to_string(prop_y).substr(0, 6);
+	std::string arm_xy_serial = std::to_string(prop_x) + "," + std::to_string(prop_y);
 
 	cv::waitKey(0);
 	
+	/// communicate with boards
 	std::cout << "--- Start serial communication ---\n"
 			  << "Please give the device port\n";
 	char dev[10];

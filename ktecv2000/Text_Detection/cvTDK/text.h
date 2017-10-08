@@ -5,28 +5,32 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/ml/ml.hpp>
 
+
 class Task
 {
 public:
 	Task(int camera);
 	virtual void execute() = 0;
+	int text_recong(cv::Mat src);
 	struct Object
 	{
 		cv::Point center;
 		cv::Rect bound;
+		int pos;
 	};
+	Object& getObject();
+	int getTarget();
+
 protected:
-	int text_recong(cv::Mat src);
+	//int text_recong(cv::Mat src);
 	int getCamera();
 	void setCamera(int camera);
-	int getTarget();
 	void setTarget(char target);
-	Object getObject();
 	void setObject(Object object);
 
 	//Target target;
 private:
-	char _target;
+	char _target = '4';
 	int _camera = 0;
 	Object _object;
 };
@@ -41,8 +45,8 @@ private:
 };
 
 
-//int text_train();
+int text_train();
 //int text_recong(Target &target);
 
-
+int track_obj();
 

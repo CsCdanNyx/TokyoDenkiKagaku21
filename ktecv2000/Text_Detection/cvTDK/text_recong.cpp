@@ -7,7 +7,7 @@
 #include "text.h"
 // global ///////////////////////////////////////////////////////////////////////////////
 
-const int MIN_CONTOUR_AREA = 1500;
+const int MIN_CONTOUR_AREA = 500;
 const int MAX_CONTOUR_AREA = 10000;
 const int RESIZED_IMAGE_WIDTH = 20;
 const int RESIZED_IMAGE_HEIGHT = 30;
@@ -21,17 +21,17 @@ public:
 	cv::Rect boundingRect;                      // bounding rect for contour
 	float fltArea;                              // area of contour
 	float ratio;
-												///////////////////////////////////////////////////////////////////////////////////////////////
-	bool checkIfContourIsValid() {                              // obviously in a production grade program
+	int shelf_x, shelf_y;									
+	bool checkIfContourIsValid() {                            
 		ratio = (float)std::max(boundingRect.width,boundingRect.height) / (float)std::min(boundingRect.width, boundingRect.height);
 		
-		if (fltArea < MIN_CONTOUR_AREA || ratio > 2.8 || ptContour.size() > 600)
+		if (fltArea < MIN_CONTOUR_AREA || ratio > 3.0)
 		{
-			return false;           // we would have a much more robust function for 
+			return false;          
 		}
 		else
 		{
-			return true;                                            // identifying if a contour is valid !!
+			return true;                                        
 		}
 	}
 
@@ -92,6 +92,10 @@ int Task::text_recong(cv::Mat src) {
 	
 	cv::Mat pic = src.clone();
 	const char target = getTarget();
+	if (target)
+		std::cout << "Target = " << target << "\n";
+	else
+		std::cout << "Detecting what digit...\n";
 	//cv::Mat pic = cv::imread(TRAIN_XML_PATH + "train_22.jpg");            // read in the test numbers image
 	
 	if (pic.empty()) {                                // if unable to open image
@@ -124,9 +128,12 @@ int Task::text_recong(cv::Mat src) {
 		255,                                  // make pixels that pass the threshold full white
 		cv::ADAPTIVE_THRESH_GAUSSIAN_C,       // use gaussian rather than mean, seems to give better results
 		cv::THRESH_BINARY_INV,                // invert so foreground will be white, background will be black
-		9,                                   // size of a pixel neighborhood used to calculate threshold value
-		2);                                   // constant subtracted from the mean or weighted mean
+		83,                                   // size of a pixel neighborhood used to calculate threshold value
+		53);                                   // constant subtracted from the mean or weighted mean
 
+
+	// 8 -> 6
+	// 
 	cv::namedWindow("Threshold: ", CV_WINDOW_NORMAL);
 	cv::resize(matThresh, out, cv::Size(800, 800));
 	cv::imshow("Threshold: ", out);
@@ -159,18 +166,23 @@ int Task::text_recong(cv::Mat src) {
 	// sort contours from left to right
 	std::sort(validContoursWithData.begin(), validContoursWithData.end(), ContourWithData::sortByBoundingRectXPosition);
 
+
 	std::string strFinalString;         // declare final string, this will have the final number sequence by the end of the program
+
+	int candidate[2] = { 0, -1 };		// char , position
+	float candidate_accuracy = 0;		
 
 	for (int i = 0; i < validContoursWithData.size(); i++) {            // for each contour
 		std::cout << "[points] " << validContoursWithData[i].ptContour.size() << "\n";
 		std::cout << "[ratio] " << validContoursWithData[i].ratio << "\n";
-		// draw a green rect around the current char
-		/*
+		
+		/// draw a green rect around the current char
+		
 		cv::rectangle(pic,                            // draw rectangle on original image
 			validContoursWithData[i].boundingRect,        // rect to draw
 			cv::Scalar(0, 255, 0),                        // green
 			2);                                           // thickness
-		*/
+		
 		cv::Mat matROI = matThresh(validContoursWithData[i].boundingRect);          // get ROI image of bounding rect
 
 		cv::Mat matROIResized;
@@ -182,43 +194,82 @@ int Task::text_recong(cv::Mat src) {
 		cv::Mat matROIFlattenedFloat = matROIFloat.reshape(1, 1);
 
 		cv::Mat matCurrentChar(0, 0, CV_32F);
+		cv::Mat neighbor_res(0, 0, CV_32F);
+		int k = 32;
+		//float res = kNearest->findNearest(matROIFlattenedFloat, 1, matCurrentChar);     // finally we can call find_nearest !!!
 		
-		kNearest->findNearest(matROIFlattenedFloat, 1, matCurrentChar);     // finally we can call find_nearest !!!
-		float fltCurrentChar = (float)matCurrentChar.at<float>(0, 0);
-		//std::cout << char(int(fltCurrentChar)) << "\n";
+		float fltCurrentChar = kNearest->findNearest(matROIFlattenedFloat, k, matCurrentChar, neighbor_res, cv::noArray());
+		std::cout << neighbor_res << "\n";
+		int accuracy = 0;
+		for (int i = 0; i < k; i++)
+		{
+			if (fltCurrentChar == (float)neighbor_res.at<float>(0, i))
+				accuracy++;
+		}
 
-		/*
+		std::cout << "Match char : " << char(int(fltCurrentChar)) << "\n";
+		std::cout << " - Accuracy : " << (float)accuracy / k << "\n";
+		std::cout << cv::Point(validContoursWithData[i].boundingRect.x + validContoursWithData[i].boundingRect.width / 2,
+			validContoursWithData[i].boundingRect.y + validContoursWithData[i].boundingRect.height / 2) << "\n";
 		cv::namedWindow("Detect", CV_WINDOW_NORMAL);
 		cv::resize(pic, out, cv::Size(600, 600));
 		cv::imshow("Detect", out);
 		cv::waitKey(0);
 		strFinalString = strFinalString + char(int(fltCurrentChar));        // append current char to full string
-		*/
-		if (target == int(fltCurrentChar) - '0')
+		
+		if ( (!target || target == char(int(fltCurrentChar))) && accuracy >= 7)
 		{
-			std::cout << "** detect ! **\n";
+
+			if (candidate_accuracy < accuracy)
+			{
+				candidate[0] = char(int(fltCurrentChar));
+				candidate[1] = i;
+			}
 			cv::rectangle(pic,                            // draw rectangle on original image
 				validContoursWithData[i].boundingRect,        // rect to draw
 				cv::Scalar(0, 255, 0),                        // green
 				2);                                           // thickness
-			
-			Object object;
-			object.center = cv::Point(validContoursWithData[i].boundingRect.x + validContoursWithData[i].boundingRect.width / 2,
-								  validContoursWithData[i].boundingRect.y + validContoursWithData[i].boundingRect.height / 2);
-			object.bound = validContoursWithData[i].boundingRect;
-			setObject(object);
-			break;
+		}
+
+	}
+	if (!target)
+	{
+		if (candidate[1] != -1)
+		{
+			std::cout << "Find digit" << candidate[0] << " !\n";
+			setTarget(candidate[0]);
+
+		}
+		else
+		{
+			std::cout << "No digit found !\n";
 		}
 	}
+	else
+	{
+		Object object;
+		int index = candidate[1];
+		if (index == -1)
+		{
+			std::cout << "Target not found...\n";
+			return -1;
+		}
+		object.center = cv::Point(validContoursWithData[index].boundingRect.x + validContoursWithData[index].boundingRect.width / 2,
+			validContoursWithData[index].boundingRect.y + validContoursWithData[index].boundingRect.height / 2);
+		object.bound = validContoursWithData[index].boundingRect;
+		setObject(object);
 
+		int src_x_unit = src.cols / 3, src_y_unit = src.rows / 3;
+		object.pos = abs(object.center.x) / src_x_unit + abs(object.center.y) / src_y_unit * 3;
+		std::cout << "found target at position " << object.pos << "\n";
+	}
 	//std::cout << "\n\n" << "numbers read = " << strFinalString << "\n\n";       // show the full string
 
 	cv::namedWindow("Detect", CV_WINDOW_NORMAL);
 	cv::resize(pic, out, cv::Size(800, 800));
-	cv::imshow("Detect", out);     // show input image with green boxes drawn around found digits
+	cv::imshow("Detect", out);     
 
-	//cv::waitKey(0);                                         // wait for user key press
-	//system("pause");
+	cv::waitKey(0);                                      
 	return(0);
 }
 
@@ -238,7 +289,7 @@ void Task::setTarget(char target)
 {
 	_target = target;
 }
-Task::Object Task::getObject()
+Task::Object& Task::getObject()
 {
 	return _object;
 }

@@ -1,9 +1,22 @@
 #include "SerialClass.h"
 
-Serial::Serial(TCHAR  *portName)
+Serial::Serial(TCHAR *portName)
 {
 	//We're not yet connected
 	this->connected = false;
+
+	printf("=> %s\n", portName);
+	char tmp_buf[20] = "";
+	if (!strncmp(portName, "COM", 3))
+	{
+		if (atoi(portName + 3) >= 9)
+		{
+			//portName = tmp_buf;
+			strcat(tmp_buf, "\\\\.\\");
+			strcat(tmp_buf, portName);
+			portName = tmp_buf;
+		}
+	}
 
 	//Try to connect to the given port throuh CreateFile
 	this->hSerial = CreateFile(portName,
