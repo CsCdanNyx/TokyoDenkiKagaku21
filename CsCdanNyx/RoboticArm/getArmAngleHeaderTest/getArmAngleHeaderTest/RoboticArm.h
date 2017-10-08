@@ -9,9 +9,11 @@
 	#include "WProgram.h"
 #endif
 
+#include <TimerOne.h>
+
 #define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
-#define PenGrabHeight	6 * CM2UNIT	
+#define PenGrabHeight 7 * CM2UNIT	
 
 // Arm's properties.
 
@@ -23,6 +25,9 @@
 #define servoPin4	6
 #define servoPin5	7
 
+// Interrupt Pin
+//#define interruptPin 8
+#define detect_optic 8
 // Some parameters could be set
 #define STEPSPEED		0.25
 #define ANGULARSPEED	0.5
@@ -43,7 +48,7 @@ class RoboticArmClass
  public:
 	/*--------------------------Initializations----------------------------------*/
 	//RoboticArmClass();
-	void init(float ix = 220, float iy = 0, float iz = 360);
+	void init(float ix = 300, float iy = 0, float iz = 300);
 	
 	///// Debugging ///////////////////////////
 	void setJ(float * Ang);
@@ -73,8 +78,7 @@ class RoboticArmClass
 
 	/*-------------------------------Challenge--------------------------------------*/
 	/**------------------Grab Marker Pen-------------------------**/
-	int GrabPen(float penX, float penY, float penZ);
-
+	int GrabPen(float penX, float penY, float penZ, float speed);
 	/**----------------------Writing-----------------------------**/
 	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
@@ -92,13 +96,12 @@ class RoboticArmClass
 
  private:
 
-	float initDegree[6] = { 90, 90, 90, 90, 150 };
+	float initDegree[6] = { 90, 90, 90, 90, 130 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
 	float tiltAngle = 0;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];
-
 	
 	// Arm's constant settings(mm).
 	const float arm[5] = { 99, 134.2f, 159, 104.5f, 93.9875f };	// Arms' length.
@@ -107,6 +110,8 @@ class RoboticArmClass
 	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
 
 };
+
+void interDelay(uint16_t del);
 
 extern RoboticArmClass Arm;
 

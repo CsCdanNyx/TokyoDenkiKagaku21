@@ -4,6 +4,9 @@
 
 #include "RoboticArm.h"
 
+
+static volatile boolean objectDetect = 0;
+
 ///*----------------------------Arm's settings----------------------------------*/
 //RoboticArmClass::RoboticArmClass()
 //{
@@ -20,13 +23,16 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->y = iy;
 	this->z = iz;
 
+	pinMode(detect_optic, INPUT);
+
+
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
 	servoAR[2].attach(servoPin2, 500, 2400);
 	servoAR[3].attach(servoPin3, 500, 2400);
 	servoAR[4].attach(servoPin4, 500, 2400);
 	servoAR[5].attach(servoPin5, 500, 2400);
-
+	
 	armGoTo(x, y, z);
 }
 
@@ -85,22 +91,22 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Ang)
 	float AsinIndCheck = (rx - arm[2] * sin(Ang[2])) / arm[3];
 	if (AsinIndCheck >= 1)
 	{
-		Serial.println(String("AsinIndCheck error, when") + " x:" + xp + " y:" + yp + " z:" + zp + " AsinIn..k:" + AsinIndCheck);
+		Serial.println(String("AsinIndCheck error, when") + " x:" + xp + " y:" + yp + " z:" + zp + " AsinIn..k:" + String(AsinIndCheck, 8));
 		AsinIndCheck = 0.99999;
 	}
 
-	Ang[3] = Ang[2] + M_PI_2 - asin(AsinIndCheck);
+	Ang[3] = -Ang[2] + M_PI_2 - asin(AsinIndCheck);
 
 	// Ang[4]
-	Ang[4] = Ang[3] - Ang[2] + tiltAngle;
+	Ang[4] = -Ang[3] - Ang[2] + tiltAngle;
 
 	// Rounding
 	for (size_t i = 0; i < 5; i++)
 		Ang[i] = round(Ang[i] * Rad2Degree * pow(10, DegPrecision)) / pow(10, DegPrecision);
 
 	Ang[1] = -Ang[1];
-	//Ang[2] = -Ang[2];
-	//Ang[3] = -Ang[3];
+	Ang[2] = -Ang[2];
+	Ang[3] = Ang[3];
 }
 
 // Still in process
@@ -122,6 +128,7 @@ void RoboticArmClass::servoAct()
 	}
 	if (DELAY)
 		delay(DELAY);
+
 }
 /**-----------------------Arm--------------------------------**/
 void RoboticArmClass::armGoTo(float xp, float yp, float zp)
@@ -141,17 +148,25 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 	for (size_t i = 0; i < 3; i++)						// Step vector calculation.
 		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * CM2UNIT / 10;
 
-	while (x != xd || y != yd || z != zd)
+	while (x != xd || y !=yd || z !=zd)
 	{
 		armGoTo(x, y, z);
-
-		this->x += vec[0];
-		this->y += vec[1];
-		this->z += vec[2];
+		if (abs(x - xd) >= 0.5)
+			this->x += vec[0];
+		else
+			this->x = xd;
+		if (abs(y - yd) >= 0.5)
+			this->y += vec[1];
+		else
+			this->y = yd;
+		if (abs(z - zd) >= 0.5)
+			this->z += vec[2];
+		else
+			this->z = zd;
 
 		//print
 		//showJ();
-		showXYZ();
+		//showXYZ();
 	}
 	armGoTo(xd, yd, zd);
 
@@ -161,7 +176,7 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 
 	//print
 	//showJ();
-	showXYZ();
+	//showXYZ();
 }
 
 void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
@@ -211,7 +226,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 
 	//print
 	//showJ("Final J: ");
-	showXYZ("Final XYZ: ");
+	//showXYZ("Final XYZ: ");
 }
 /**-----------------------Claw--------------------------------**/
 void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
@@ -226,7 +241,7 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 	{
 		///print
 		//Serial.println("Clamp!!");
-		Ang[5] = 135;
+		Ang[5] = 130;
 	}
 
 	servoAct();
@@ -234,35 +249,50 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 
 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
-int RoboticArmClass::GrabPen(float penX, float penY, float penZ)
+static void DetectDistance(void)
 {
-	// Destination: x: penX, y: penY, z: penZ.
-	/* Arm moves to z, opens the claw and stretches forwoard, 
-	grabs the pen then arm goes straight up away from the cap.
-	Finally, arm moves to the initial writing position. */
-	float PenCapHeight = ( 3 + 2 ) * CM2UNIT;
-	armGoDirect(this->x, this->y, penZ + PenGrabHeight);
-	clawClamp(J, 'r');
-	
-	// Stretch!!!
-	Serial.println("Stretch!!");
-	
-	armGoLine(penX, penY, this->z);
-	clawClamp(J, 'c');
-	
-	// Take away!!
-	Serial.println("Take away!!");
-	
-	armGoLine(this->x, this->y, this->z + PenCapHeight);
-	
-	// Move to the intial point for writing, which is still uncertain.
-	float writeInitPoint[3] = { 300, 0, 300 };	// ?
-	armGoDirect(writeInitPoint[0], writeInitPoint[1], writeInitPoint[2]);
-	
-	Serial.println("Finish!!");
-
-	return 1;	// In case if slides or controller needs the returned value.
+	if (digitalRead(detect_optic))        // If detector Output is HIGH,
+	{
+		objectDetect = false;           // then no object was detected;
+	}
+	else                                // but if the Output is LOW,
+	{
+		delayMicroseconds(395);               // wait for another 15 pulses.
+		if (digitalRead(detect_optic))    // If the Output is now HIGH,
+		{                               // then first Read was noise
+			objectDetect = false;       // and no object was detected;
+		}
+		else                            // but if the Output is still LOW,
+		{
+			objectDetect = true;        // then an object was truly detected.
+		}
+	}
 }
+
+
+
+int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
+{
+	int initxyz[3] = { x,y,z };
+	int liftPenHeight = 110;
+	Serial.println("Release");
+	clawClamp(J,'r');
+	armGoLine( (x + 50), penY, z, speed);
+	armGoLine(x, penY, penZ, speed);
+	Timer1.attachInterrupt(DetectDistance, 210);
+
+	for (float count = (penX - x) / 100; count <= (penX - x); count = count + count) {
+		armGoLine((x + count), penY, penZ, speed);
+		if (objectDetect) break;
+	}
+	Timer1.detachInterrupt();
+
+	clawClamp(J,'g');
+	armGoLine(penX, penY, (penZ + liftPenHeight), speed);
+	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
+	return 1;	// In case of slides or controller needs the return value.
+}
+
 
 /**----------------------Writing-----------------------------**/
 void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
