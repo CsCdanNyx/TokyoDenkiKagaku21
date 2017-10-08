@@ -27,7 +27,10 @@
 
 // Interrupt Pin
 //#define interruptPin 8
-#define detect_optic 8
+#define detect_optic_Y 8
+#define detect_optic_X 9
+#define ENABLE_Y 10
+#define ENABLE_X 11
 // Some parameters could be set
 #define STEPSPEED		0.25
 #define ANGULARSPEED	0.5
@@ -79,6 +82,9 @@ class RoboticArmClass
 	/*-------------------------------Challenge--------------------------------------*/
 	/**------------------Grab Marker Pen-------------------------**/
 	int GrabPen(float penX, float penY, float penZ, float speed);
+
+	/**------------------Drop pen---------------------------------**/
+	int DropPen(float penX, float penY, float penZ, float speed);
 	/**----------------------Writing-----------------------------**/
 	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
@@ -96,7 +102,7 @@ class RoboticArmClass
 
  private:
 
-	float initDegree[6] = { 90, 90, 90, 90, 130 };
+	float initDegree[6] = { 90, 90, 90, 90, 132 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
@@ -111,7 +117,6 @@ class RoboticArmClass
 
 };
 
-void interDelay(uint16_t del);
 
 extern RoboticArmClass Arm;
 

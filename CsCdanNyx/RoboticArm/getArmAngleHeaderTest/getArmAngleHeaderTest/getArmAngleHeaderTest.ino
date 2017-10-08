@@ -6,7 +6,7 @@
 
 // the setup function runs once when you press reset or power the board
 #include "RoboticArm.h"
-float speed = 0.08f;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
+float speed = 0.15f;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
 float angSpeed = 0.025f;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 //float initDeg[6] = { 90, 90, 150, 90, 150, 90 };
 void setup() {
@@ -37,6 +37,9 @@ void setup() {
 
 	Serial.flush();					// Flush Arduino Serial output.
 	while (!Serial.available());	// Start looping after Serial port input.
+	//Arm.armGoLine(301, 1, 300.5, speed);
+	Arm.GrabPen(430, 0, 110, speed); //input final Destination for arm to Grab Pen
+	Arm.DropPen(430, 0, 110, speed);
 
 }
 

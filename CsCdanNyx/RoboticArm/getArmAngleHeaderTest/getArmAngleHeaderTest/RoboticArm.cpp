@@ -4,9 +4,6 @@
 
 #include "RoboticArm.h"
 
-
-static volatile boolean objectDetect = 0;
-
 ///*----------------------------Arm's settings----------------------------------*/
 //RoboticArmClass::RoboticArmClass()
 //{
@@ -23,9 +20,7 @@ void RoboticArmClass::init(float ix, float iy, float iz)
 	this->y = iy;
 	this->z = iz;
 
-	pinMode(detect_optic, INPUT);
-
-
+	//pinMode(interruptPin, INPUT_PULLUP);
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
 	servoAR[2].attach(servoPin2, 500, 2400);
@@ -115,7 +110,6 @@ void RoboticArmClass::getArmPosition(float * Ang, float * XYZ)
 
 }
 
-
 /*-------------------------------Actions--------------------------------------*/
 void RoboticArmClass::servoAct()
 {
@@ -148,18 +142,21 @@ void RoboticArmClass::armGoLine(float xd, float yd, float zd, float step)
 	for (size_t i = 0; i < 3; i++)						// Step vector calculation.
 		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * step * CM2UNIT / 10;
 
+	float countNum = fmax((xd - x) / vec[0], (zd -z) / vec[2]);
+	int count = 0;
+
 	while (x != xd || y !=yd || z !=zd)
 	{
 		armGoTo(x, y, z);
-		if (abs(x - xd) >= 0.5)
+		if (abs(x - xd) > 0.5)
 			this->x += vec[0];
 		else
 			this->x = xd;
-		if (abs(y - yd) >= 0.5)
+		if (abs(y - yd) > 0.5)
 			this->y += vec[1];
 		else
 			this->y = yd;
-		if (abs(z - zd) >= 0.5)
+		if (abs(z - zd) > 0.5)
 			this->z += vec[2];
 		else
 			this->z = zd;
@@ -249,48 +246,63 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 
 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
-static void DetectDistance(void)
-{
-	if (digitalRead(detect_optic))        // If detector Output is HIGH,
-	{
-		objectDetect = false;           // then no object was detected;
-	}
-	else                                // but if the Output is LOW,
-	{
-		delayMicroseconds(395);               // wait for another 15 pulses.
-		if (digitalRead(detect_optic))    // If the Output is now HIGH,
-		{                               // then first Read was noise
-			objectDetect = false;       // and no object was detected;
-		}
-		else                            // but if the Output is still LOW,
-		{
-			objectDetect = true;        // then an object was truly detected.
-		}
-	}
-}
-
-
-
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
 	int initxyz[3] = { x,y,z };
 	int liftPenHeight = 110;
+	float div = (penX - x) / 100;
+	bool val = true;
 	Serial.println("Release");
 	clawClamp(J,'r');
-	armGoLine( (x + 50), penY, z, speed);
-	armGoLine(x, penY, penZ, speed);
-	Timer1.attachInterrupt(DetectDistance, 210);
+	armGoLine( (x + 50), y, z, speed);
+	armGoLine(x, y, penZ, speed);
+	armGoLine(x, y + 60, z, speed);
 
-	for (float count = (penX - x) / 100; count <= (penX - x); count = count + count) {
-		armGoLine((x + count), penY, penZ, speed);
-		if (objectDetect) break;
+	pinMode(ENABLE_Y, OUTPUT);
+	digitalWrite(ENABLE_Y, HIGH);
+	pinMode(detect_optic_Y, INPUT);
+	for (float i = 0; i <= 120; i+=2) {
+		armGoLine(x, y-1, z, speed);
+		boolean val = digitalRead(detect_optic_Y);
+		if (val) {
+			break;
+			Serial.println("interruptY");
+		}
 	}
-	Timer1.detachInterrupt();
+	digitalWrite(ENABLE_Y, LOW);
+	val = true;
 
-	clawClamp(J,'g');
-	armGoLine(penX, penY, (penZ + liftPenHeight), speed);
+	pinMode(ENABLE_X, OUTPUT);
+	digitalWrite(ENABLE_X ,HIGH);
+	pinMode(detect_optic_X, INPUT);
+	/*Timer1.attachInterrupt(, 210);*/
+	for (float  i = 0; i <= (penX - x); i = i + div){
+		armGoLine((x + div), y, penZ, speed);
+		boolean val = digitalRead(detect_optic_X);
+		if (val) {
+			break;
+			Serial.println("interruptX");
+		}
+	}
+	/*Timer1.detachInterrupt();*/
+	digitalWrite(ENABLE_X, LOW);
+
+	clawClamp(J, 'g');
+	armGoLine(this->x, this->y, (z + liftPenHeight), speed);
 	armGoLine(initxyz[0],  initxyz[1], initxyz[2], speed);
 	return 1;	// In case of slides or controller needs the return value.
+}
+
+/**------------------Drop Pen---------------------------------**/
+int RoboticArmClass::DropPen(float penX, float penY, float penZ, float speed) {
+	int initxyz[3] = { x,y,z };
+	
+	armGoLine((x + 50), y, z, speed);
+	armGoLine(x, y, penZ, speed);
+	armGoLine(penX, penY, z, speed);
+	Serial.println("Release");
+	clawClamp(J, 'r');
+	armGoLine(initxyz[0], initxyz[1], initxyz[2], speed);
 }
 
 
