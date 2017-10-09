@@ -4,16 +4,16 @@
 #define _ROBOTICARM_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+#include "Arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #include <TimerOne.h>
 
 #define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
-#define PenGrabHeight 7 * CM2UNIT	
+#define PenGrabHeight 7 * CM2UNIT
 
 // Arm's properties.
 
@@ -48,11 +48,11 @@
 
 class RoboticArmClass
 {
- public:
+public:
 	/*--------------------------Initializations----------------------------------*/
 	//RoboticArmClass();
 	void init(float ix = 300, float iy = 0, float iz = 300);
-	
+
 	///// Debugging ///////////////////////////
 	void setJ(float * Ang);
 	void servoInit();
@@ -64,10 +64,11 @@ class RoboticArmClass
 
 	void getArmPosition(float * Ang, float * XYZ);
 
+	bool isAngExcess(float * Ang);
 
 	//void adjPosition();				// Adjust position x, y, z value from Servos' angle J.
 	//bool isAngleFailed();				// Check if Servos' angle hit the limitations.
-	
+
 	//void Jzero();
 
 	/*-------------------------------Actions--------------------------------------*/
@@ -88,7 +89,6 @@ class RoboticArmClass
 	/**----------------------Writing-----------------------------**/
 	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
-
 	/*----------------------------Print and Show----------------------------------*/
 	void showJ(const char * title = NULL);
 	//void showAbJ(const char * title = NULL);
@@ -100,24 +100,21 @@ class RoboticArmClass
 	float * getXYZ();
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
- private:
+private:
 	float initDegree[6] = { 87, 93, 90, 90, 140, 60 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
 	float tiltAngle = 0;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];
-	
+
 	// Arm's constant settings(mm).
 	const float arm[5] = { 99, 134.2f, 159, 104.5f, 93.9875f };	// Arms' length.
 	//		    arm[5]: J0-J1, J1-J2, J2-J3, J3-J4, J4-XYZ.
-	const float delYc = 4.5f;				// deltay			// The distance between J1 and Y on y-axis. 
+	const float delYc = 4.5f;				// deltay			// The distance between J1 and Y on y-axis.
 	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
-
 };
-
 
 extern RoboticArmClass Arm;
 
 #endif
-

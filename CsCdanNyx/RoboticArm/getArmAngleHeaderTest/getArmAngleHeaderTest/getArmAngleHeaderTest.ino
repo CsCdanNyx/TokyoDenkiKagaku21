@@ -11,16 +11,15 @@ float speed = 0.18f;		// Prefered: 0.25 with DegPrecision 3. Step speed for armG
 float angSpeed = 0.025f;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 //float initDeg[6] = { 90, 90, 150, 90, 150, 90 };
 void setup() {
-
 	Serial.begin(9600);
-	// J3 - forward  J4+ upward 
+	// J3 - forward  J4+ upward
 	//Initial Position
 	Arm.init(300, 0, 300);
 	//Arm.armGoTo(300,0,300);
 
 	Arm.showJ("init J:\t");
 	Arm.showXYZ("init Posit:\t");
-	
+
 	//Arm.servoInit();
 
 	//yp: -70~70 zp: 195~360
@@ -46,14 +45,13 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-
 	//Arm.setJ(initDeg);
 	//Arm.servoDoJ();
 
 	//Arm.armGoLine(240, -70, 360, speed);
 	//Arm.armGoLine(240,  70, 360, speed);
 	//Arm.armGoLine(270,   0, 200, speed);
-	
+
 	//Arm.armGoDirect(120, 0, 360, angSpeed);
 	//Arm.armGoDirect(220, 0, 360, angSpeed);
 }
