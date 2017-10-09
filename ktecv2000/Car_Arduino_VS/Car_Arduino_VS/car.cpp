@@ -1,6 +1,7 @@
 #include "car.h"
 #include "printf.h"
-#include <Timer1\TimerOne.h>
+//#include <Timer1\TimerOne.h>
+#include <TimerOne.h>
 
 static volatile unsigned long teeth = 0;
 static volatile unsigned long t = 0;
@@ -22,8 +23,19 @@ Car::Car(PinSet pin)
 	// Initializer list error (object)
 }
 void Car::halt() const
-{
+{  //downard maxPWM delay20
+	/*digitalWrite(pin.M1, LOW);
+	analogWrite(pin.MOT_1, MAX_PWM); delay(20);
 	analogWrite(pin.MOT_1, MIN_PWM);
+	digitalWrite(pin.M2, LOW);
+	analogWrite(pin.MOT_2, MAX_PWM); delay(20);
+	analogWrite(pin.MOT_2, MIN_PWM);*/
+
+	digitalWrite(pin.M1, HIGH);
+	analogWrite(pin.MOT_1, MAX_PWM); delay(20);
+	analogWrite(pin.MOT_1, MIN_PWM);
+	digitalWrite(pin.M2, HIGH);
+	analogWrite(pin.MOT_2, MAX_PWM); delay(20);
 	analogWrite(pin.MOT_2, MIN_PWM);
 }
 void Car::setCheckPoint()
@@ -425,10 +437,26 @@ void Slider::move(uint8_t mode, float dt)
 	// move base on time
 	if (mode == SLIDER_MOVE_T)
 	{
-		forward(MAX_PWM);		
-		while (t < time * 100);
+		backward(MAX_PWM);	
+		//8.71  (1-2)  8.43 (2-3)   upward
+		//7.13  (3-2)  7.2  (2-1)     downard
+
+		//8.46  (1-2)  8.45 (2-3)   upward
+		//7.12  (3-2)  7.11  (2-1)     downard
+
+		//8.46  (1-2)   upward
+		//7.11 (2-1) downward
+
+		//5.96   push
+		//5.96   pull
+
+		//5.87  push
+		//5.92 pull
+		while (Serial.read() == -1); // !
+
 		halt();
 		delay(1000);
+		printf_serial("Time = %lu (0.001s)\n", t);
 		t = 0;
 
 		//backward(MAX_PWM);
@@ -436,7 +464,6 @@ void Slider::move(uint8_t mode, float dt)
 		//halt();
 		//t = 0;
 		Timer1.detachInterrupt();
-		printf_serial("Time = %lu (0.001s)\n", t);
 		return;
 	}
 	/*

@@ -1,7 +1,8 @@
+#include <TimerOne.h>
 #include "printf.h"
 #include "car.h"
 
-#include <Timer1\TimerOne.h>
+//#include <Timer1\TimerOne.h>
 
 struct
 {
@@ -107,8 +108,9 @@ void is_stop();
 void loop()
 {
 	while (Serial.read() == -1);
-	car.wheel->move(WHEEL_MOVE_GO);
-	
+	//car.wheel->move(WHEEL_MOVE_GO);
+	car.slider->setDir(SLIDER_DIR_H);
+	car.slider->move(SLIDER_MOVE_T, 0);
 	//car.wheel->left(1);
 	//while(1) car.wheel->read_sensor();
 	printf_serial("over\n");
