@@ -9,15 +9,12 @@
 #include "WProgram.h"
 #endif
 
-#include <TimerOne.h>
+// Enable debugging
+#define DEBUG
+#define ErrorOut
 
-#define CM2UNIT	10					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
-// Pen
-#define PenGrabHeight 7 * CM2UNIT
-
-// Arm's properties.
-
-// Servo's Pin settings
+// Pin settings
+//// Servo's Pin settings
 #define servoPin0	2
 #define servoPin1	3
 #define servoPin2	4
@@ -25,38 +22,50 @@
 #define servoPin4	6
 #define servoPin5	7
 
-// Interrupt Pin
-//#define interruptPin 8
+//// Interrupt Pin
 #define OPTIC_Y_INPUT_PIN  8
 #define OPTIC_X_INPUT_PIN  9
 #define OPTIC_ENABLE_Y_PIN 15
 #define OPTIC_ENABLE_X_PIN 14
+
 // Some parameters could be set
-#define STEPSPEED		0.25
-#define ANGULARSPEED	0.5
+#define STEPSPEED		0.18f
+#define ANGULARSPEED	0.025f
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
-#define DELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
+#define SERVODELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
+
+
+const float CM2UNIT = 10;					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
+// Pen
+const float PenGrabHeight = 7 * CM2UNIT;
 
 // For calculation.
 #define _USE_MATH_DEFINES
-#define Rad2Degree 180/M_PI
+#include <math.h>
+const float Rad2Degree = 180 / M_PI;
 // For printing
 #define SIZEOF_ARRAY(array) (sizeof(array)/sizeof(*array))
 
-#include <math.h>
 #include "Servo.h"
+#include <TimerOne.h>
 
 class RoboticArmClass
 {
 public:
 	/*--------------------------Initializations----------------------------------*/
 	//RoboticArmClass();
-	void init(float ix = 300, float iy = 0, float iz = 300);
+	void initServo();
+	void initPosit(float ix = 300, float iy = 0, float iz = 300, float angspeed = ANGULARSPEED);
 
 	///// Debugging ///////////////////////////
 	void setJ(float * Ang);
 	void servoInit();
 	void servoDoJ();
+
+	void waitkey();
+	int serialReadInt(bool needprint = false);	// Read in an int or -int.
+	void servoAngTestByControl();				// Directly type in angle to control servo.
+	void readServoAng(float * Ang);
 	///////////////////////////////////////////
 
 	/*----------------------Angle & Path Calculations----------------------------*/
@@ -82,10 +91,10 @@ public:
 
 	/*-------------------------------Challenge--------------------------------------*/
 	/**------------------Grab Marker Pen-------------------------**/
-	int GrabPen(float penX, float penY, float penZ, float speed);
+	int GrabPen(float penX, float penY, float penZ, float step = STEPSPEED, float angSpeed = ANGULARSPEED);
 
 	/**------------------Drop pen---------------------------------**/
-	int DropPen(float penX, float penY, float penZ, float speed);
+	int DropPen(float penX, float penY, float penZ, float step = STEPSPEED, float angSpeed = ANGULARSPEED);
 	/**----------------------Writing-----------------------------**/
 	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
@@ -101,11 +110,11 @@ public:
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
 private:
-	float initDegree[6] = { 87, 93, 90, 90, 140, 60 };
-	float x = 0, y = 0, z = 0;						// Position coordinate.
-	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
-	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.
-	float tiltAngle = 0;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
+	float baseDegree[6] = { 87, 93, 90, 90, 140, 60 };	// Base Angle for calculations.
+	float x = 0, y = 0, z = 0;							// Position coordinate.
+	float J[6] = { -87, 0, 90, 0, 40, 0 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
+	//float J[6] = { 0, 0, 90, 0, 40, 0 };
+	float tiltAngle = 0;			// alpha			// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];
 
 	// Arm's constant settings(mm).
