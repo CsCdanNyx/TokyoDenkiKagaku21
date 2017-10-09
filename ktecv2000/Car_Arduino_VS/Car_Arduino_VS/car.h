@@ -11,8 +11,8 @@
 
 
 //-------------------------------
-#define __COLOR_SENSOR__
-#define __WHEEL__
+//#define __COLOR_SENSOR__
+//#define __WHEEL__
 #define __SLIDER__
 //-------------------------------
 
@@ -53,7 +53,7 @@ protected:
 	//virtual void move(int d) = 0;
 
 	const PinSet pin;
-	const uint8_t MAX_PWM = 255, MIN_PWM = 0;
+	const int MAX_PWM = 255, MIN_PWM = 0;
 	uint8_t last_dir;
 	
 private:
@@ -65,20 +65,19 @@ class Wheel : public Car
 
 public:
 	Wheel(PinSet pin);
-	void move(int mode, int d = 0);
+	void move(int mode, int d = 1);
 	void spin() const;
-	void forward(uint8_t pwm) const;
-	void backward(uint8_t pwm) const;
+
 
 private:
 	void read_sensor();
-	//void forward() const;
-	//void backward() const;
-	void left(int8_t) const;
-	void right(int8_t) const;
+	void forward(int) const;
+	void backward(int) const;
+	void left(int) const;
+	void right(int) const;
 	
-	char sensors[10];
-	const uint8_t sensors_num[10] = { 3,5,6,7,8,9 };	// PIN 4,5 BREAK !
+	volatile uint8_t sensors[10];
+	const uint8_t sensors_num[6] = { 41,43,45,47,49,51 };	// PIN 7 BREAK !
 	const uint8_t max_sen = 6;
 	// ----------------
 
@@ -114,9 +113,14 @@ private:
 
 	const int d_v_total = 1;
 	const int d_h_total = 50;
+
+	// [Task] knock down sign-stand 
+	const float t_shelf_12 = 0;			// cm/s 
+	const float t_shelf_23 = 0;			// cm/s
+
 };
 
-bool isCheckPoint(const PinSet &pin);
+bool isCheckPoint(PinSet pin);
 
 #endif
 

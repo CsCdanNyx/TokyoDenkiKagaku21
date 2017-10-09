@@ -51,14 +51,14 @@ Wheel::Wheel(PinSet pin) : Car(pin)
 {
 	//this->pin.WHEEL_OI = pin.WHEEL_OI;
 	
-	for (uint8_t i = 0; i < max_sen; i++)
-		pinMode(sensors_num[i], INPUT);
+	//for (uint8_t i = 0; i < max_sen; i++)
+		//pinMode(sensors_num[i], INPUT_PULLUP);
 
 	/// color sensor interrupt pin
 	//pinMode(pin.ON_CHECK, INPUT_PULLUP);
 	//attachInterrupt(digitalPinToInterrupt(pin.ON_CHECK), setCheckPoint, LOW);
 }
-void Wheel::move(int mode, int d = 0)
+void Wheel::move(int mode, int d = 1)
 {
 	/*
 	if (d != DEFAULT_DISTANCE)
@@ -110,59 +110,161 @@ void Wheel::move(int mode, int d = 0)
 	*/
 	//else		// line-following mode
 	{
-		if (mode == WHEEL_MOVE_GO)
+		//if (mode == WHEEL_MOVE_GO)
 		{
 			forward(MAX_PWM);
 		}
-		else if (mode == WHEEL_MOVE_BACK)
+		//else if (mode == WHEEL_MOVE_BACK)
 		{
-
+			//backward(MAX_PWM);
 		}
 		//delay(100);
-		Car::clearCheckPoint();
+		//Car::clearCheckPoint();
 
-		const uint8_t read_times = 7;
+	
+		const uint8_t read_times = 4;
+		const uint8_t color_times = 30;
 		uint8_t last[6] = {0,0,0,0,0,0};
-		uint8_t times = 0;
-		//while (!isOnCheckPoint())
-		while(!isCheckPoint(pin))
-		{
-			read_sensor();
-			for (int j = 0; j < max_sen; j++)
-				last[j] += sensors[j];
-			
-			if (times++ >= read_times)
-			{
-				uint8_t l, r;  // numbers in non-line area
-				for (l = 0; last[l] > read_times/2 && l < max_sen / 2; l++);
-				for (r = 0; last[max_sen - r - 1] > read_times / 2 && r < max_sen / 2; r++);
+		
+		uint8_t rt = 0, ct = 0;
+		//while (isCheckPoint(pin));
 
-				if (l == r)
+		bool leave_check_point = false;
+		while(1)
+		{
+			//bool isCheckPt;
+			
+			//bool isCheckPt = isCheckPoint(pin);
+			//if (isCheckPt && leave_check_point)
+			//{
+			//	printf_serial("In check point\n");
+			//	d--;
+			//	leave_check_point = false;
+			//	continue;
+			//}
+			//else if (!isCheckPt && !leave_check_point)
+			//{
+			//	printf_serial("Leave check point\n");
+			//	leave_check_point = true;
+			//}
+			
+			//read_sensor();
+			//for (int j = 0; j < max_sen; j++)
+				//last[j] += sensors[j];
+			
+			//if (rt++ >= read_times)
+			{
+				//for (int i = 0; i < 6; i++)
+					//printf_serial("%d ", sensors[i]);
+
+				//printf_serial(" => ");
+				uint8_t l, r;  // numbers in non-line area
+				//for (l = 0; last[l] > read_times/2 && l < max_sen / 2; l++);
+				//for (r = 0; last[max_sen - r - 1] > read_times / 2 && r < max_sen / 2; r++);
+
+				l = digitalRead(sensors_num[0]);
+				l += digitalRead(sensors_num[1]);
+				l += digitalRead(sensors_num[2]);
+
+				r = digitalRead(sensors_num[3]);
+				r += digitalRead(sensors_num[4]);
+				r += digitalRead(sensors_num[5]);
+
+				static uint8_t check = 0;
+				static bool inCheck = false;
+				if (inCheck)
 				{
-					//printf_serial("Go %d,%d\n", l, r);
-					//Serial.println("go");
+					if (isCheckPoint(pin))
+					{
+						break;
+					}
+					//if (l < 3 && r < 3 && abs(l - r) <= 1)
+					//	inCheck = false;
+					else
+					{
+						continue;
+					}
+				}
+				if (l == 3 && r== 3)
+				{
+					static uint8_t isCheck = 0;
+
+					if (isCheck++ < 5)
+					{
+
+						delay(10);
+						continue;
+					}
+					else
+					{
+						isCheck = 0;
+						printf_serial("check point %d\n", check);
+					}
+					forward(MAX_PWM);
+					delay(120);
+					if (check == 0 || check == 1)
+					{
+						//left(3);
+					}
+					else if (check == 2)
+					{
+						//right(3);
+					}
+					check++;
+					inCheck = true;
+					delay(200);
+				}
+				else if (l == r)
+				{
+					//printf_serial("go %d %d\n", l, r);
+
+					//digitalWrite(pin.M1, HIGH);
+					//digitalWrite(pin.M2, HIGH);
+					//analogWrite(pin.MOT_1, 255);
+					//analogWrite(pin.MOT_2, 255);
 					forward(MAX_PWM);
 				}
 				else if (r > l)
 				{
-					//printf_serial("Left %d,%d\n", l, r);
+					//printf_serial("left %d\n", r-l);
 					left(r - l);
+					//analogWrite(pin.MOT_1, MAX_PWM);
+					//analogWrite(pin.MOT_2, 0);
+
 				}
 				else
 				{
-					//printf_serial("Right %d,%d\n", l, r);
-					right(l - r);
-				}
-				times = 0;
-				for (int i = 0; i < max_sen; i++)
-					last[i] = 0;
-			}
+					//printf_serial("right %d\n", l-r);
+					//analogWrite(pin.MOT_1, 0);
+					//analogWrite(pin.MOT_2, MAX_PWM);
 
-			delayMicroseconds(10);
+
+					right(l - r);
+
+				}
+				rt = 0;
+				//for (int i = 0; i < max_sen; i++)
+					//last[i] = 0;
+
+				/*if (ct >= color_times)
+				{
+					ct = 0;
+					if (isCheckPoint(pin))
+						break;
+				}*/
+			}
+			//delay(1);
+			delayMicroseconds(100);
+			//ct++;
 		}
+		delay(200);
+		// eliminate inertia
 		if (mode == WHEEL_MOVE_GO)
 		{
 			backward(MAX_PWM / 4);
+			//delay(10);
+			left(3);
+			delay(30);
 		}
 		else if (mode == WHEEL_MOVE_BACK)
 		{
@@ -171,106 +273,115 @@ void Wheel::move(int mode, int d = 0)
 		return;
 	}
 }
-void Wheel::forward(uint8_t pwm) const
+void Wheel::forward(int pwm) const
 {
 	static bool dir = false;
-	//if (!dir)
+	if (!dir)
 	{
 		digitalWrite(pin.M1, HIGH);
-		digitalWrite(pin.M2, LOW);
+		digitalWrite(pin.M2, HIGH);
 		dir = true;
 	}
 	analogWrite(pin.MOT_1, pwm);
 	analogWrite(pin.MOT_2, pwm);
 }
-void Wheel::backward(uint8_t pwm) const
+void Wheel::backward(int pwm) const
 {
 
 	digitalWrite(pin.M1, LOW);
-	digitalWrite(pin.M2, HIGH);
+	digitalWrite(pin.M2, LOW);
 	
 	analogWrite(pin.MOT_1, pwm);
 	analogWrite(pin.MOT_2, pwm);
 
 	digitalWrite(pin.M1, HIGH);
-	digitalWrite(pin.M2, LOW);
+	digitalWrite(pin.M2, HIGH);
 }
 void Wheel::read_sensor()
 {
 #ifdef __WHEEL__
-	noInterrupts();
-	byte IN_E = PINE, IN_H = PINH;
-	interrupts();
+	//noInterrupts();
+	//byte IN_E = PINE, IN_H = PINH;
+	//interrupts();
+
+	//static const uint8_t threshold = 200;
+	for (int i = 0; i < max_sen; i++)
+	{
+		//sensors[i] = analogRead(sensors_num[i]);
+		sensors[i] = digitalRead(sensors_num[i]);
+		//printf_serial("%u ", sensors[i]);
+	}
+	//printf_serial("\n");
+
+	//sensors[0] = (IN_E >> 4) & 1;// PE4
+	//sensors[1] = (IN_E >> 5) & 1;// PE5
+	//sensors[2] = (IN_E >> 3) & 1;// PE3
+	//sensors[3] = (IN_H >> 3) & 1;// PH3
+	//sensors[4] = (IN_H >> 5) & 1;// PH5
+	//sensors[5] = (IN_H >> 6) & 1;// PH6
 
 	//for (int i = 0; i < max_sen; i++)
 	//{
-	//	sensors[i] = digitalRead(sensors_num[i]);
-	//	Serial.print(sensors[i], DEC);
-	//	Serial.print(" ");
-	//}
-
-	//Serial.println("");
-
-	sensors[0] = (IN_E >> 4) & 1;// PE4
-	sensors[1] = (IN_E >> 5) & 1;// PE5
-	sensors[2] = (IN_E >> 3) & 1;// PE3
-	sensors[3] = (IN_H >> 3) & 1;// PH3
-	sensors[4] = (IN_H >> 4) & 1;// PH4
-	sensors[5] = (IN_H >> 5) & 1;// PH5
-
-
-	//for (int i = 0; i < max_sen; i++)
 	//	printf_serial("%d ", sensors[i]);
+	//}
 	//printf_serial("\n");
 #endif // __WHEEL__
 	
 }
-void Wheel::left(int8_t bend) const
+void Wheel::left(int bend) const
 {
 	
 	//analogWrite(pin.MOT_1, MAX_PWM);
-	//analogWrite(pin.MOT_2, MIN_PWM);
+	//analogWrite(pin.MOT_2, 0);
 
 	switch (bend)
 	{
 	case 1:
+		//printf_serial("left 1\n");
 		analogWrite(pin.MOT_1, 150);
 		analogWrite(pin.MOT_2, MIN_PWM);
 		break;
 	case 2:
+		//printf_serial("left 2\n");
 		analogWrite(pin.MOT_1, MAX_PWM);
 		analogWrite(pin.MOT_2, MIN_PWM);
+
 		break;
 	default:
-		digitalWrite(pin.M2, HIGH);
-		analogWrite(pin.MOT_1, 150);
-		analogWrite(pin.MOT_2, 100);
-		delay(20);
-		analogWrite(pin.MOT_2, MIN_PWM);
+		//printf_serial("left >= 3\n");
 		digitalWrite(pin.M2, LOW);
+		analogWrite(pin.MOT_1, 250);
+		analogWrite(pin.MOT_2, 200);
+		delay(30);
+		analogWrite(pin.MOT_2, MIN_PWM);
+		digitalWrite(pin.M2, HIGH);
 		break;
 	}
 
 }
-void Wheel::right(int8_t bend) const
+void Wheel::right(int bend) const
 {
 	//analogWrite(pin.MOT_2, MAX_PWM);
-	//analogWrite(pin.MOT_1, MIN_PWM);
+	//analogWrite(pin.MOT_1, 0);
+	//bend = 2;
 	switch (bend)
 	{
 	case 1:
+		//printf_serial("right 1\n");
 		analogWrite(pin.MOT_2, 150);
 		analogWrite(pin.MOT_1, MIN_PWM);
 		break;
 	case 2:
+		//printf_serial("right 2\n");
 		analogWrite(pin.MOT_2, MAX_PWM);
 		analogWrite(pin.MOT_1, MIN_PWM);
 		break;
 	default:
+		//printf_serial("right >= 3\n");
 		digitalWrite(pin.M1, LOW);
-		analogWrite(pin.MOT_2, 150);
-		analogWrite(pin.MOT_1, 100);
-		delay(20);
+		analogWrite(pin.MOT_2, 250);
+		analogWrite(pin.MOT_1, 200);
+		delay(30);
 		analogWrite(pin.MOT_1, MIN_PWM);
 		digitalWrite(pin.M1, HIGH);
 		break;
@@ -279,7 +390,7 @@ void Wheel::right(int8_t bend) const
 void Wheel::spin() const
 {
 	digitalWrite(pin.M1, HIGH);
-	digitalWrite(pin.M2, HIGH);
+	digitalWrite(pin.M2, LOW);
 	analogWrite(pin.MOT_1, MAX_PWM);
 	analogWrite(pin.MOT_2, MAX_PWM);
 }
@@ -290,6 +401,8 @@ Slider::Slider(PinSet pin) : Car(pin)
 {
 }
 void Slider::move(uint8_t mode, float dt)
+// mode : counting time / distance
+// dt : time or distance depending on mode
 {
 
 	t = 0;
@@ -310,7 +423,7 @@ void Slider::move(uint8_t mode, float dt)
 	Timer1.attachInterrupt(time_tick);
 
 	// move base on time
-	if (dt == SLIDER_MOVE_T)
+	if (mode == SLIDER_MOVE_T)
 	{
 		forward(MAX_PWM);		
 		while (t < time * 100);
@@ -318,12 +431,12 @@ void Slider::move(uint8_t mode, float dt)
 		delay(1000);
 		t = 0;
 
-		backward(MAX_PWM);
-		while (t < time * 100);
-		halt();
-		t = 0;
-
+		//backward(MAX_PWM);
+		//while (t < time * 100);
+		//halt();
+		//t = 0;
 		Timer1.detachInterrupt();
+		printf_serial("Time = %lu (0.001s)\n", t);
 		return;
 	}
 	/*
@@ -334,7 +447,7 @@ void Slider::move(uint8_t mode, float dt)
 	*/
 
 	// move base on distance
-	else if (dt == SLIDER_MOVE_D)
+	else if (mode == SLIDER_MOVE_D)
 	{
 		if (dt >= 0)
 		{

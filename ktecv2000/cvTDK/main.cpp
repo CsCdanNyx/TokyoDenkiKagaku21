@@ -120,8 +120,7 @@ int main1()
 	task_list[0]->execute();
 	std::cout << "\n[*] Task_1 is done !\n";
 
-	char target = task_list[0]->getTarget();
-	char wbuf[] = { target , '\0'};
+	char wbuf[] = "whatever";
 	while (!SP1->WriteData((TCHAR*)wbuf, 1))
 	{
 		std::cout << ".";
@@ -160,10 +159,10 @@ int main1()
 	std::cout << "\n[*] Task_2 is done !\n";
 
 	int pos = task_list[0]->getObject().pos;
-	char wbuf[] = { pos , '\0' };
+	char wbuf_pos[] = { pos , '\0' };
 
 	//char wbuf[] = "30,30";
-	while (!SP1->WriteData((TCHAR*)wbuf, 1))
+	while (!SP1->WriteData((TCHAR*)wbuf_pos, 1))
 	{
 		std::cout << ".";
 		Sleep(300);

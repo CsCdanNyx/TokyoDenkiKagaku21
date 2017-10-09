@@ -29,10 +29,9 @@ void setup()
 	pinMode(pinSet.MOT_2, OUTPUT);
 	pinMode(pinSet.M1, OUTPUT);
 	pinMode(pinSet.M2, OUTPUT);
-	//pinMode(pinSet.ON_CHECK, INPUT);
 	//pinMode(pinSet.WHEEL_OI, INPUT);
-	pinMode(pinSet.ON_CHECK, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(pinSet.ON_CHECK), Car::setCheckPoint, LOW);
+	//pinMode(pinSet.ON_CHECK, INPUT_PULLUP);
+	//attachInterrupt(digitalPinToInterrupt(pinSet.ON_CHECK), Car::setCheckPoint, LOW);
 
 	// instance
 	Wheel tmp_wheel(pinSet);
@@ -92,6 +91,9 @@ void setup()
 
 	printf_serial("Start!\n");
 }
+
+char task_1_target;
+int task_2_pos;
 // start
 void task_0();
 // detect target
@@ -104,15 +106,13 @@ void is_stop();
 
 void loop()
 {
-	//while (Serial.read() == -1);
-	//car.wheel->forward();
-	//while (!isCheckPoint(pinSet));
-	//car.wheel->backward();
-	//delay(20);
-	//car.wheel->halt();
-	//printf_serial("Stop!\n");
-	//Serial.flush();
-	//delay(100);
+	while (Serial.read() == -1);
+	car.wheel->move(WHEEL_MOVE_GO);
+	
+	//car.wheel->left(1);
+	//while(1) car.wheel->read_sensor();
+	printf_serial("over\n");
+	delay(200);
 }
 
 void loop1()
@@ -161,7 +161,7 @@ void task_0()
 		/// serial communication [board -> computer]
 		/// form computer task started
 		Serial.println("Button is pressed, start moving");
-		delay(1000);
+		delay(500);
 		Car::clearCheckPoint();
 		car.wheel->move(WHEEL_MOVE_GO);
 		Car::clearCheckPoint();
@@ -176,17 +176,7 @@ void task_1()
 	}
 
 	delay(300);
-	char serial_data;
-	while (1)
-	{
-		serial_data = Serial.read();
-
-		if (serial_data)
-		{
-			break;
-		}
-		delay(20);
-	}
+	while (Serial.read() == -1);
 	Serial.flush();
 	delay(300);
 	Car::clearCheckPoint();
@@ -207,7 +197,7 @@ void task_2()
 	/// send data(distance) back to board
 	Serial.flush();
 	delay(300);
-	while (!Serial.available());
+
 	//while (!Serial.read()); 
 	int pos;
 	while ((pos = Serial.read()) == -1);
