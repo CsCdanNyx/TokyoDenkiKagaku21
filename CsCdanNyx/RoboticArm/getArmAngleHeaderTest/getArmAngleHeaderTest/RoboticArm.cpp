@@ -246,7 +246,7 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 /**------------------Grab Marker Pen-------------------------**/
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
-	int initxyz[3] = { this->x,this->y,this->z };
+	int initxyz[3] = { this->x, this->y, this->z };
 	int liftPenHeight = 80;
 	float offsetY = 20;
 	float offsetX = 8;
@@ -298,7 +298,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 			{
 				//Serial.println("End of the Pen at Z.");
 				//showJ("EndZ:\t");
-				armGoLine(this->x, this->y, this->z - 0.5 - GrabPtUpperBoundfromEnd, 0.09f);
+				armGoLine(this->x, this->y, this->z - 0.5 - GrabPtUpperBoundfromEnd, speed / 2);
 				break;
 			}
 		}
@@ -314,6 +314,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 
 	notDetected = true;
 	// Detect pen alone x-axis
+	bool hasDetected = false;
 	pinMode(OPTIC_ENABLE_X_PIN, OUTPUT);
 	digitalWrite(OPTIC_ENABLE_X_PIN, HIGH);
 	pinMode(OPTIC_X_INPUT_PIN, INPUT);
@@ -326,10 +327,14 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 		if (!notDetected)
 		{
 			//Serial.println("interruptX");
-			armGoLine((this->x + offsetX), this->y, this->z, speed / 2);
+			hasDetected = true;
+		}
+		else if (hasDetected && notDetected)
+		{
 			break;
 		}
 	}
+
 	digitalWrite(OPTIC_ENABLE_X_PIN, LOW);
 
 	clawClamp(J, 'g');
@@ -347,6 +352,8 @@ int RoboticArmClass::DropPen(float penX, float penY, float penZ, float speed) {
 	Serial.println("Release");
 	clawClamp(J, 'r');
 	armGoLine(initxyz[0], initxyz[1], initxyz[2], speed);
+
+	return 1;
 }
 
 
