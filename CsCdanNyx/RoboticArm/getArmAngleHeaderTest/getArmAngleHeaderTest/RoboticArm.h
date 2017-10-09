@@ -101,7 +101,7 @@ class RoboticArmClass
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
  private:
-	float initDegree[6] = { 93, 93, 90, 90, 140, 60 };
+	float initDegree[6] = { 87, 93, 90, 90, 140, 60 };
 	float x = 0, y = 0, z = 0;						// Position coordinate.
 	float J[6] = { 0, 0, 0, 0, 0, 0 };				// Each Servo's angle.
 	//bool parallelToFloor = true;					// Parallel to the ground, otherwise it would parallel to the whiteboard.

@@ -248,7 +248,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 {
 	int initxyz[3] = { this->x, this->y, this->z };
 	int liftPenHeight = 80;
-	float offsetY = 20;
+	float offsetY = 5;
 	float offsetX = 8;
 	float GrabPtUpperBoundfromEnd = 5;
 	bool notDetected = true;		// Check if optic detection detect pen. If detected, return false.
@@ -287,7 +287,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 	delay(500);
 	for (size_t i = 0; i <= 200; i++)
 	{
-		Serial.println(this->z);
+		//Serial.println(this->z);
 		armGoLine(this->x, this->y, this->z + 0.5, 0.09f);
 		notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 		//Serial.println(notDetected?"not":"yes");
@@ -320,13 +320,14 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float speed)
 	pinMode(OPTIC_X_INPUT_PIN, INPUT);
 	delay(1000);
 
-	for (float i = 0; i <= 600; i++)
+	for (float i = 0; i <= 400; i++)
 	{
 		armGoLine((this->x + 0.2), this->y, this->z, speed / 2);
+		//showJ();
 		notDetected = digitalRead(OPTIC_X_INPUT_PIN);
 		if (!notDetected)
 		{
-			//Serial.println("interruptX");
+			Serial.println("interruptX");
 			hasDetected = true;
 		}
 		else if (hasDetected && notDetected)
