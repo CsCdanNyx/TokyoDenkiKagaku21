@@ -12,6 +12,7 @@
 // Enable debugging
 #define DEBUG
 #define ErrorOut
+//#define ErrorHandle
 
 // Pin settings
 //// Servo's Pin settings
@@ -32,7 +33,7 @@
 #define STEPSPEED		0.18f
 #define ANGULARSPEED	0.025f
 #define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
-#define SERVODELAY	0					// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
+#define SERVODELAY		0			// Prefered: 0 by reason of servos' vibration (Due to intterupt triggering). Function servoAct's delaying.
 
 
 const float CM2UNIT = 10;					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
@@ -55,8 +56,9 @@ public:
 	/*--------------------------Initializations----------------------------------*/
 	//RoboticArmClass();
 	void initServo();
-	void initPosit(float ix = 300, float iy = 0, float iz = 300, float angspeed = ANGULARSPEED);
-
+	void initPosit(float ix = 300, float iy = 0, float iz = 300, float angSpeed = ANGULARSPEED);
+	
+	int ArmErrorHandle();
 	///// Debugging ///////////////////////////
 	void setJ(float * Ang);
 	void servoInit();
@@ -69,11 +71,12 @@ public:
 	///////////////////////////////////////////
 
 	/*----------------------Angle & Path Calculations----------------------------*/
-	void getArmAngleDeg(float xp, float yp, float zp, float * Ang);
+	void getArmAngleDeg(float xp, float yp, float zp, float * Deg, bool setError = false);
 
 	void getArmPosition(float * Ang, float * XYZ);
 
-	bool isAngExcess(float * Ang);
+	bool isAngExcess(float * Ang, bool setError = false);
+	
 
 	//void adjPosition();				// Adjust position x, y, z value from Servos' angle J.
 	//bool isAngleFailed();				// Check if Servos' angle hit the limitations.
@@ -81,7 +84,7 @@ public:
 	//void Jzero();
 
 	/*-------------------------------Actions--------------------------------------*/
-	void servoAct();													// Servos' signal output.
+	void servoAct(bool ERRcheck = false);													// Servos' signal output.
 	/**-----------------------Arm--------------------------------**/
 	void armGoTo(float xp, float yp, float zp);							// Arm move to point.
 	void armGoLine(float xd, float yd, float zd, float step = STEPSPEED);			// Move to destination linearly.
@@ -94,7 +97,7 @@ public:
 	int GrabPen(float penX, float penY, float penZ, float step = STEPSPEED, float angSpeed = ANGULARSPEED);
 
 	/**------------------Drop pen---------------------------------**/
-	int DropPen(float penX, float penY, float penZ, float step = STEPSPEED, float angSpeed = ANGULARSPEED);
+	int DropPen(float canX, float canY, float canZ, float step = STEPSPEED, float angSpeed = ANGULARSPEED);
 	/**----------------------Writing-----------------------------**/
 	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
@@ -108,15 +111,17 @@ public:
 	float * getJ();
 	float * getXYZ();
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
+	float J[6] = { -75, 0, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
 
 private:
-	float baseDegree[6] = { 87, 93, 90, 90, 140, 60 };	// Base Angle for calculations.
+	float baseDegree[6] = { 90, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
 	float x = 0, y = 0, z = 0;							// Position coordinate.
-	float J[6] = { -87, 0, 90, 0, 40, 0 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
+	//float J[6] = { -75, 0, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
 	//float J[6] = { 0, 0, 90, 0, 40, 0 };
 	float tiltAngle = 0;			// alpha			// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];
 
+	uint8_t ERRcode = 0;			// 0 success, -1 restoration, -2 asin err, 1 ang excessed ( > 0 could effect on arm execution, while < 0 not. )
 	// Arm's constant settings(mm).
 	const float arm[5] = { 99, 134.2f, 159, 104.5f, 93.9875f };	// Arms' length.
 	//		    arm[5]: J0-J1, J1-J2, J2-J3, J3-J4, J4-XYZ.
