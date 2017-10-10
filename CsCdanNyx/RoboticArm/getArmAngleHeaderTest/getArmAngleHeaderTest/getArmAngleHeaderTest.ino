@@ -17,6 +17,7 @@ void setup() {
 
 	Serial.begin(9600);
 
+	/*
 	//Initial Position
 	Arm.initServo();
 	Arm.waitkey();
@@ -37,6 +38,25 @@ void setup() {
 
 	Arm.showJ("\nEnding J: ");
 	Serial.println("End setup!!");
+	*/
+
+
+
+	//----------------OnGoing-----------------------//
+	Arm.initServo();
+
+	Serial.read();
+	Arm.initPosit(300, 0, 300, angSpeed);
+	Serial.print("");
+
+	Serial.read();
+	Arm.GrabPen(430, 0, 110, step, angSpeed);
+	Serial.print("");
+
+	Serial.read();
+	Arm.DropPen(400, 50, 250, step, angSpeed);
+	Serial.print("");
+
 }
 
 // the loop function runs over and over again until power down or reset
