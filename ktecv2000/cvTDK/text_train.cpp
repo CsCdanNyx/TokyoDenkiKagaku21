@@ -7,12 +7,12 @@
 #include<filesystem>
 #include<Windows.h>
 // global variables ///////////////////////////////////////////////////////////////////////////////
-const int MIN_CONTOUR_AREA = 800;
+const int MIN_CONTOUR_AREA = 500;
 
 const int RESIZED_IMAGE_WIDTH = 20;
 const int RESIZED_IMAGE_HEIGHT = 30;
 
-const std::string TRAIN_DATA_DIR = "E:\\class\\TDK\\cvTDK\\x64\\Debug";
+const std::string TRAIN_DATA_DIR = "E:\\class\\TDK\\cvTDK\\x64\\Debug\\training";
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void read_directory(const std::string& name, std::vector<std::string> &v);
@@ -34,19 +34,48 @@ int text_train() {
 	cv::Mat matTrainingImagesAsFlattenedFloats;
 
 	// possible chars we are interested in are digits 0 through 9 and capital letters A through Z, put these in vector intValidChars
-	std::vector<int> intValidChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+	std::vector<int> intValidChars = { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 	
-	std::vector<std::string> train_data;
-	read_directory(TRAIN_DATA_DIR, train_data);
-	for (std::vector<std::string>::iterator it = train_data.begin(); it != train_data.end(); ++it)
-	{
-		std::string file = *it;
-		imgTrainingNumbers = cv::imread(TRAIN_DATA_DIR + "\\" + file);          // read in training numbers image
+	//std::vector<std::string> train_data;
+	//read_directory(TRAIN_DATA_DIR, train_data);
+	//for (std::vector<std::string>::iterator it = train_data.begin(); it != train_data.end(); ++it)
+	
 
-		if (imgTrainingNumbers.empty()) {                               // if unable to open image
-			std::cout << "error: image not read from file " << file << "\n\n";         // show error message on command line
-			return(-1);                                                  // and exit program
+	cv::VideoCapture video(0);
+	cv::waitKey(0);
+	int times = 0;
+	while(1)
+	{
+		//std::string file = *it;
+		
+		video >> imgTrainingNumbers;
+		Sleep(100);
+		video >> imgTrainingNumbers;
+		cv::namedWindow("source");
+		cv::imshow("source", imgTrainingNumbers);
+		std::cout << "[" << times++ << "]\n";
+		int press = cv::waitKey(0);
+		std::cout << press << "\n";
+		if (press == 32)
+		{
+			Sleep(100);
+			continue;
 		}
+		else if (press == 27)
+		{
+			std::cout << "Are you sure to end the training?\n";
+			int press = cv::waitKey(0);
+			if (press == 27)
+				break;
+			else
+				continue;
+		}
+		//imgTrainingNumbers = cv::imread(TRAIN_DATA_DIR + "\\" + file);          // read in training numbers image
+
+		//if (imgTrainingNumbers.empty()) {                               // if unable to open image
+		//	std::cout << "error: image not read from file " << file << "\n\n";         // show error message on command line
+		//	return(-1);                                                  // and exit program
+		//}
 
 		cv::cvtColor(imgTrainingNumbers, imgGrayscale, CV_BGR2GRAY);        // convert to grayscale
 
@@ -61,10 +90,10 @@ int text_train() {
 			255,                                    // make pixels that pass the threshold full white
 			cv::ADAPTIVE_THRESH_GAUSSIAN_C,         // use gaussian rather than mean, seems to give better results
 			cv::THRESH_BINARY_INV,                  // invert so foreground will be white, background will be black
-			11,                                     // size of a pixel neighborhood used to calculate threshold value
-			2);                                     // constant subtracted from the mean or weighted mean
+			75,                                     // size of a pixel neighborhood used to calculate threshold value
+			30);                                     // constant subtracted from the mean or weighted mean
 
-		cv::namedWindow("imgThresh", cv::WINDOW_NORMAL);
+		//cv::namedWindow("imgThresh", cv::WINDOW_NORMAL);
 		cv::imshow("imgThresh", imgThresh);         // show threshold image for reference
 
 		imgThreshCopy = imgThresh.clone();          // make a copy of the thresh image, this in necessary b/c findContours modifies the image
@@ -74,10 +103,13 @@ int text_train() {
 			v4iHierarchy,                           // output hierarchy
 			cv::RETR_EXTERNAL,                      // retrieve the outermost contours only
 			cv::CHAIN_APPROX_SIMPLE);               // compress horizontal, vertical, and diagonal segments and leave only their end points
+		for (int i = 0; i < ptContours.size(); i++) {                          
+			if (cv::contourArea(ptContours[i]) > MIN_CONTOUR_AREA) {               
+				cv::Rect boundingRect = cv::boundingRect(ptContours[i]);    
 
-		for (int i = 0; i < ptContours.size(); i++) {                           // for each contour
-			if (cv::contourArea(ptContours[i]) > MIN_CONTOUR_AREA) {                // if contour is big enough to consider
-				cv::Rect boundingRect = cv::boundingRect(ptContours[i]);                // get the bounding rect
+
+				//if (ptContours.size() > 800 || ptContours.size() < 100)
+				//	continue;
 
 				cv::rectangle(imgTrainingNumbers, boundingRect, cv::Scalar(0, 0, 255), 2);      // draw red rectangle around each contour as we ask user for input
 
@@ -101,7 +133,7 @@ int text_train() {
 				int intChar = cv::waitKey(0);           // get key press
 
 				if (intChar == 27) {        // if esc key was pressed
-					return(0);              // exit program
+					break;              // exit program
 				}
 				else if (std::find(intValidChars.begin(), intValidChars.end(), intChar) != intValidChars.end()) {     // else if the char is in the list of chars we are looking for . . .
 
@@ -129,7 +161,6 @@ int text_train() {
 		std::cout << "error, unable to open training classifications file, exiting program\n\n";        // show error message
 		return(-1);                                                                                      // and exit program
 	}
-
 	fsClassifications << "classifications" << matClassificationInts;        // write classifications into classifications section of classifications file
 	fsClassifications.release();                                            // close the classifications file
 
