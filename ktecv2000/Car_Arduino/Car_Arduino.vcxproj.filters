@@ -15,28 +15,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Car_Arduino_VS.ino" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="__vm\.Car_Arduino_VS.vsarduino.h">
+    <ClInclude Include="__vm\.Car_Arduino.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="car.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="printf.h">
+    <ClInclude Include="photon_interrupter\car.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="car.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="printf.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="check_point.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <None Include="photon_interrupter\photon_interrupter.ino" />
   </ItemGroup>
 </Project>
