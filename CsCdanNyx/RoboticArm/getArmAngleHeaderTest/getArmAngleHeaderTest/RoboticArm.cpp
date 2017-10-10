@@ -27,10 +27,15 @@ void RoboticArmClass::initServo()
 
 int RoboticArmClass::initPosit(float ix, float iy, float iz, float angSpeed)
 {
+	Serial.read();		//communication
+
 	initXYZ[0] = ix;
 	initXYZ[1] = iy;
 	initXYZ[2] = iz;
 	armGoDirect(ix, iy, iz, angSpeed);
+
+	Serial.print("");	//communication
+
 	return 1;
 }
 
@@ -421,6 +426,9 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 /**------------------Grab Marker Pen-------------------------**/
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, float angspeed)
 {
+
+	Serial.read();	//communication
+
 #ifdef DEBUG
 	Serial.println("Start GrabPen!!");
 #endif // DEBUG
@@ -609,12 +617,17 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	
 	//armGoLine(initxyz[0], initxyz[1], initxyz[2], step);
 	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angspeed);
+
+	Serial.print("");	//communication
+
 	return 1;	// In case of slides or controller needs the return value.
 }
 
 /**------------------Drop Pen---------------------------------**/
 int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, float angSpeed)
 {
+	Serial.read();	//communication
+
 #ifdef DEBUG
 	Serial.println("Start DropPen!!");
 #endif // DEBUG
@@ -631,6 +644,8 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 	clawClamp(J, 'r');
 	delay(500);
 	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angSpeed);
+
+	Serial.print("");	//communication
 
 	return 1;
 }
