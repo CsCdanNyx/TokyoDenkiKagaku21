@@ -13,7 +13,7 @@
 /*--------------------------Initializations----------------------------------*/
 void RoboticArmClass::initServo()
 {
-	Serial.println("//----Start Initiallization----//");
+	Serial.println("//----Start Initialization----//");
 
 	servoAR[0].attach(servoPin0, 500, 2400);
 	servoAR[1].attach(servoPin1, 500, 2400);
@@ -25,9 +25,13 @@ void RoboticArmClass::initServo()
 	servoAct();
 }
 
-void RoboticArmClass::initPosit(float ix, float iy, float iz, float angSpeed)
+int RoboticArmClass::initPosit(float ix, float iy, float iz, float angSpeed)
 {
+	initXYZ[0] = ix;
+	initXYZ[1] = iy;
+	initXYZ[2] = iz;
 	armGoDirect(ix, iy, iz, angSpeed);
+	return 1;
 }
 
 int RoboticArmClass::ArmErrorHandle()
@@ -41,7 +45,7 @@ int RoboticArmClass::ArmErrorHandle()
 		showJ("ExitJ: ");
 #endif // DEBUG
 		this->ERRcode = -1;
-		armGoDirect(300, 0, 300, ANGULARSPEED);
+		armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], ANGULARSPEED);
 #ifdef ErrorOut
 		Serial.println("Finished Error Handling!!");
 #endif // ErrorOut
@@ -420,8 +424,8 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Start GrabPen!!");
 #endif // DEBUG
-	int initxyz[3] = { this->x,this->y,this->z };
-	int liftPenHeight = 70;
+	//int initxyz[3] = { this->x,this->y,this->z };
+	int liftPenHeight = 75;
 	float offsetY = 3;
 	float offsetX = 13;
 	float offsetZforfarX = 10;
@@ -604,7 +608,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #endif // DEBUG	
 	
 	//armGoLine(initxyz[0], initxyz[1], initxyz[2], step);
-	initPosit(initxyz[0], initxyz[1], initxyz[2], angspeed);
+	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angspeed);
 	return 1;	// In case of slides or controller needs the return value.
 }
 
@@ -614,7 +618,7 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Start DropPen!!");
 #endif // DEBUG
-	int initxyz[3] = { this->x, this->y, this->z };
+	//int initxyz[3] = { this->x, this->y, this->z };
 	/*armGoLine((x + 50), y, z, step);
 	armGoLine(x, y, canZ, step);
 	armGoLine(canX, y, z, step);*/
@@ -626,7 +630,7 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 
 	clawClamp(J, 'r');
 	delay(500);
-	initPosit(initxyz[0], initxyz[1], initxyz[2], angSpeed);
+	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angSpeed);
 
 	return 1;
 }
@@ -681,6 +685,7 @@ void RoboticArmClass::showXYZ(const char * title, bool XYZdisp)
 	//}
 }
 
+/*
 float * RoboticArmClass::getJ()
 {
 	return J;
@@ -691,6 +696,7 @@ float * RoboticArmClass::getXYZ()
 	float P[3] = { x, y, z };
 	return P;
 }
+*/
 
 void RoboticArmClass::printOut(float * AR, size_t ARsize, const char * Hstring, const char * split)
 {

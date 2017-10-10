@@ -7,8 +7,8 @@
 // the setup function runs once when you press reset or power the board
 
 #include "RoboticArm.h"
-float step = 0.18f;				// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
-float angSpeed = 0.025f;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
+float step = 0.18f;				// Preferred: 0.25 with DegPrecision 3. Step speed for armGoLine.
+float angSpeed = 0.025f;		// Preferred: 1 with DegPrecision 3. Angular step for armGoDirect.
 
 float teststep = 2;
 float testang = 2;
@@ -27,14 +27,12 @@ void setup() {
 
 	//Arm.servoAngTestByControl();
 
-	//while (!Serial.available());	// Start looping after Serial port input.
-
 
 	//Arm.waitkey();
 	//Arm.GrabPen(430, 0, 110, step, angSpeed); //input final Destination for arm to Grab Pen
 	
 	Arm.waitkey();
-	Arm.DropPen(400, 0, 250, step, angSpeed);
+	Arm.DropPen(400, 50, 250, step, angSpeed);
 
 
 	Arm.showJ("\nEnding J: ");
