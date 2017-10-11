@@ -37,11 +37,12 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
         
     r = math.sqrt(math.pow(rx,2) + math.pow(rz,2));
     theta = math.atan( rz/rx );
+    print(r);
+    print(159.4+104.5)
     a1 = r*math.cos(theta);
     b1 = math.acos((math.pow(r,2) + math.pow(r2,2) - math.pow(r3,2)) / (2*r2*r));
     
     J[2] = math.pi/2 - b1 - theta;
-    
     
     if eq == 'n':
         J[3] = J[2] + math.pi/2 - math.asin( ( a1 - 159 * math.sin(J[2]) ) / 104.5 );
@@ -67,6 +68,8 @@ def getArmAngle( xp, yp, zp, eq = 'n', DegreePrecision = 'n' ):
         J[4] = J[3] - J[2];
     if not parallel:
         J[4] = J[3] - J[2] + math.pi/3;
+    
+    J[1] = -J[1];
     
     if DegreePrecision == 'n':
          return [ round(math.degrees(d)) for d in J ];
@@ -106,6 +109,11 @@ for yp in range(-70, 71):
     f.write(",".join(str(d) for d in degree)+", "+ str(yp) + "\n");
 f.close();
 ''' 
+xp = 400;
+yp = 0;
+zp = 300;
+degree = getArmAngle(xp, yp, zp, 'n',3);
+print(degree);
 
 xp = 300;
 yp = 0;
