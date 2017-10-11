@@ -9,13 +9,13 @@
 	#include "WProgram.h"
 #endif
 
-/// Duplicated defines needed comfigurations.
-#define DegPrecision	3			// Prefered: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
+/// Duplicated defines needed configurations.
+#define DegPrecision	3			// Preferred: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-
 const float Degree2Rad = M_PI / 180;
+
 
 class LettersClass
 {
