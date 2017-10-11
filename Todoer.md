@@ -31,6 +31,46 @@ What do you want to do next ? Write it down !!
 
 
 ## ktecv2000
-
+### CAR MOVEMENT
+- [ ] Move smoothly at uphill.
+- [ ] Accurate measurement of wheel moving distance by optical interrupter.
+- [X] Detect check point.
+- [X] Send the signal of reaching check point back.
+### SLIDER MOVEMENT
+- [X] Velocity measurement of vertical and horizontal sliders.
+- [X] Well APIs and their implementations for sliders (Seperated from original Class).
+### COLOR SENSOR
+- [ ] Purchase. 
+- [ ] Detect color correctly.
+- [ ] Install underneath the car.
+- [ ] Send signal to other boards.
+- [ ] Reset while leaving check point or reset button is pressed.
+### *TASK_1* - KNOCK DOWN SIGN STAND
+- [X] Detect specific digit.
+- [ ] Calculate the distance to the digit for the two sliders.   
+    - [ ] 1. Picture as input.   or    
+    - [ ] 2. Fixed distances depending on the position digit-sign at.
+- [ ] Flat and fixed camera (To fix the inaccurance of y-axis distance).
+- [ ] **Completely working**
+### *TASK_2* - SHORT PATH
+- [X] Cones detections.
+- [ ] (Car) Turn to specific angle.
+- [ ] Feedback control by camera (cones' positions).
+- [ ] Communication between computer(position, vedio) and arduino(movement).
+- [ ] **Completely working**
+### *TASK_3* - WRITING
+- [ ] Grab pen.    
+    - [ ] depth sensor.    
+    - [ ] width : Adjust arm or wheels until depth sensor detected valid value (air/pen).    
+    - [ ] depth : Firstable, approximately move slider toward pen until an acceptable short distance has been detected. After width and height are adjusted, move accurately with depth sensor as input.     
+    - [ ] height : Fixed distance.    
+    
+### INTEGRATION
+- [X] Serial communication.
+- [X] Communication between computer and boards.
+- [ ] Execution can be reset to any task by pressing reset button and providing task number as input.   
+    - [ ] send reset signal to PC/board.      
+    - [ ] Reset signal could be understand by receivers, stop execution properly and wait for start signal.       
+    - [ ] Receivers stop execution properly (including record current task) and wait for restart signal.       
 ## Chrislu30604
 

@@ -5,23 +5,22 @@
 */
 
 // the setup function runs once when you press reset or power the board
+
 #include "RoboticArm.h"
-
-float speed = 1;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
-float angSpeed = 1;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
-
+float speed = 0.18f;		// Prefered: 0.25 with DegPrecision 3. Step speed for armGoLine.
+float angSpeed = 0.025f;		// Prefered: 1 with DegPrecision 3. Angular step for armGoDirect.
 //float initDeg[6] = { 90, 90, 150, 90, 150, 90 };
-
 void setup() {
 
 	Serial.begin(9600);
-
+	// J3 - forward  J4+ upward 
 	//Initial Position
-	Arm.init(220, 0, 360);
+	Arm.init(300, 0, 300);
+	//Arm.armGoTo(300,0,300);
 
 	Arm.showJ("init J:\t");
-	Arm.showXYZ("init Position: ", true);
-
+	Arm.showXYZ("init Posit:\t");
+	
 	//Arm.servoInit();
 
 	//yp: -70~70 zp: 195~360
@@ -31,14 +30,16 @@ void setup() {
 	//Arm.armGoLine(220,   0, 195, speed);
 	//Arm.armGoLine(220,   0, 360, speed);
 
-	//Arm.armGoDirect(180, 0, 360, angSpeed);
+	//Arm.armGoDirect(250, 0, 300, angSpeed);
 	//Serial.println("Revert!!");
-	//Arm.armGoDirect(220, 0, 360, angSpeed);
-
-	Serial.println("End!!");
+	//Arm.armGoDirect(300, 0, 300, angSpeed);
 
 	Serial.flush();					// Flush Arduino Serial output.
 	while (!Serial.available());	// Start looping after Serial port input.
+
+	//Arm.armGoLine(301, 1, 300.5, speed);
+	Arm.GrabPen(450, 0, 110, speed); //input final Destination for arm to Grab Pen
+	//Arm.DropPen(400, 0,110, speed);
 
 }
 
