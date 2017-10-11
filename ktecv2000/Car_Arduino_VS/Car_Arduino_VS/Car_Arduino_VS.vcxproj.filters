@@ -27,15 +27,21 @@
     <ClInclude Include="printf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RoboticArm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="car.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="printf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="check_point.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RoboticArm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="car.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

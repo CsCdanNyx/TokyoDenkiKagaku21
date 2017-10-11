@@ -27,7 +27,7 @@ bool isCheckPoint(PinSet pin)
 	digitalWrite(pin.S3, HIGH);
 	//count OUT, pBLUE, BLUE  
 	 
-	//blue = pulseIn(pin.COLOR_OUT, digitalRead(pin.COLOR_OUT) == HIGH ? LOW : HIGH);
+	blue = pulseIn(pin.COLOR_OUT, digitalRead(pin.COLOR_OUT) == HIGH ? LOW : HIGH);
 	digitalWrite(pin.S2, HIGH);
 
 	//count OUT, pGreen, GREEN  
@@ -35,6 +35,6 @@ bool isCheckPoint(PinSet pin)
 	//delay(100);
 	//printf_serial("%d %d %d\n", red, green, blue);
 	//return ((int)(green-red) > R_G_DIFF && red < R_RANGE);
-	return ((int)(green - red) > R_G_DIFF);
+	return (abs(green - red) > R_G_DIFF && blue > 80 && red < 100);
 
 }

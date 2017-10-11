@@ -68,8 +68,8 @@ public:
 	Wheel(PinSet pin);
 	void move(int mode, int d = 1);
 	void spin(int dir) const;
-	void forward(int) const;
-	void backward(int) const;
+	void forward(int) ;
+	void backward(int) ;
 	void read_sensor();
 
 
@@ -77,17 +77,21 @@ private:
 	//void read_sensor();
 	//void forward(int) const;
 	//void backward(int) const;
-	void left(int) const;
-	void right(int) const;
+	void left(int) ;
+	void right(int) ;
 	
 	volatile uint8_t sensors[10];
 	
+	bool dir = false;
+
 	const uint8_t sensors_num[6] = { 33,31,30,32,34,36 };	// PIN 7 BREAK !
 	const uint8_t max_sen = 6;
 	// ----------------
 
 	const uint8_t PITCH = 5;
 	const uint8_t TEETH = 60;
+
+	const float turn_l_half = 0;
 
 };
 
@@ -108,6 +112,9 @@ public:
 	const float t_h_pushOrPull = 4.6;
 	const float t_v_up = 7.3, t_v_down = 6.8;			// cm/s 
 
+	const float t_v_pickPen = 8.88;
+	const float t_h_pickPen = 2.5;
+	const float t_v_dropPen = 15.05;
 private:
 	void forward(uint8_t pwm) const;
 	void backward(uint8_t pwm) const;

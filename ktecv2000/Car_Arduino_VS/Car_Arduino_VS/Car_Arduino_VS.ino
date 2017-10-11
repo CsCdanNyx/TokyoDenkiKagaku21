@@ -1,8 +1,7 @@
 #include "printf.h"
 #include "car.h"
-
 #include <Timer1\TimerOne.h>
-
+#include "RoboticArm.h"
 struct
 {
 	Wheel *wheel = nullptr;
@@ -56,6 +55,9 @@ void setup()
 	Slider tmp_slider(pinSet);
 	car.slider = &tmp_slider;
 	// car.slider = &((Slider)(pinSet)); // wrong !
+
+	// Arm setup
+	Arm.initServo();
 #endif // __SLIDER__
 
 	// Color Sensor
@@ -115,7 +117,7 @@ void loop1()
 	delay(200);
 }
 
-void loop()
+void loop5()
 {
 	Serial.flush();
 
@@ -129,6 +131,18 @@ void loop()
 	Car::clearCheckPoint();
 	task_2();
 	Car::clearCheckPoint();
+	while (1);
+
+}
+
+void loop()
+{
+	while (Serial.read() == -1);
+	Serial.flush();
+	Car::clearCheckPoint();
+	task_0();
+	Car::clearCheckPoint();
+	task_3();
 	while (1);
 
 }
@@ -220,6 +234,93 @@ void task_2()
 #endif // __WHEEL
 
 
+}
+
+void task_3()
+{
+#ifdef __WHEEL__
+	Serial.println("Enter pick-pen check point");
+#endif
+#ifdef __SLIDER__
+	Serial.flush();
+	delay(300);
+	char cmd;
+	while ((cmd = Serial.read()) == -1);
+	if (cmd == 'S')
+	{
+		Serial.println("Pulling up slider to pick pen\n");
+
+		delay(2000);
+		car.slider->setDir(SLIDER_DIR_V);
+		car.slider->move(SLIDER_MOVE_T, car.slider->t_v_pickPen);
+		delay(2000);
+		car.slider->setDir(SLIDER_DIR_H);
+		car.slider->move(SLIDER_MOVE_T, car.slider->t_h_pickPen);
+
+	}
+	else
+	{
+		Serial.flush();
+		delay(300);
+	}
+
+	while (Serial.read() == -1);
+	Arm.initPosit(300, 0, 300);
+	delay(1000);
+	Arm.GrabPen(430, 0, 110);
+	
+	delay(2000);
+	car.slider->move(SLIDER_MOVE_T, -(car.slider->t_h_pickPen));
+	Serial.print("GrabPen Finished.");
+	
+	//while (Serial.read() == -1);
+	//Arm.DropPen(400, 50, 250);
+	//Serial.print("DropPen Finished.");
+#endif // __SLIDER__
+}
+
+void task_4()  // pick / drop pen
+{
+#ifdef __WHEEL__
+	Serial.println("Enter drop-pen check point");
+	car.wheel->spin('R');
+	delay(1200);
+	car.wheel->halt();
+
+#endif
+
+#ifdef __SLIDER__
+	Serial.flush();
+	delay(300);
+	char cmd;
+	while ( (cmd = Serial.read()) == -1);
+	if (cmd == 'S')
+	{
+		Serial.println("Pulling up slider to drop pen\n");
+
+		delay(2000);
+		car.slider->setDir(SLIDER_DIR_V);
+		car.slider->move(SLIDER_MOVE_T, car.slider->t_v_dropPen);
+		return;
+	}
+	Serial.flush();
+	delay(300);
+
+	while (Serial.read() == -1);
+	Arm.initPosit(300, 0, 300);
+	Serial.print("Init Complete.");
+
+	while (Serial.read() == -1);
+	Arm.GrabPen(430, 0, 110);
+	Serial.print("GrabPen Finished.");
+
+	while (Serial.read() == -1);
+	Arm.DropPen(400, 50, 250);
+	Serial.print("DropPen Finished.");
+#endif // __SLIDER__
+
+
+	while (1);
 }
 
 void keyes_ir()

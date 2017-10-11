@@ -110,13 +110,11 @@ void Wheel::move(int mode, int d = 1)
 	*/
 	//else		// line-following mode
 	{
-		const uint8_t read_times = 7;
-		const uint8_t color_times = 30;
 		uint8_t last[6] = { 0,0,0,0,0,0 };
 
 		uint8_t rt = 0, ct = 0;
 
-		static uint8_t check_num = 5;
+		static uint8_t check_num = 13-1;
 		static bool inCheck = false;
 
 		bool leave_check_point = false;
@@ -162,10 +160,12 @@ void Wheel::move(int mode, int d = 1)
 					//printf_serial("%d %d\n", l, r);
 					if (inCheck)
 					{
-						if (check_num == 4)
+						if (check_num == 4 )
 						{
 							check_num++;
+
 							while (isCheckPoint(pin));
+							
 							inCheck = false;
 							backward(MAX_PWM);
 							delay(70);
@@ -201,11 +201,15 @@ void Wheel::move(int mode, int d = 1)
 								spin('R');
 							halt();
 							delay(100);
-							backward(200);
-							delay(1000);
-							forward(255);
-							delay(30);
-							halt();
+
+							{
+
+								backward(200);
+								delay(1000);
+								forward(255);
+								delay(30);
+								halt();
+							}
 							break;
 						}
 						// to correct the IR error causing by check point
@@ -222,7 +226,7 @@ void Wheel::move(int mode, int d = 1)
 					{
 						static uint8_t isCheck_accuracy = 0;
 
-						if (isCheck_accuracy++ < 15)
+						if (isCheck_accuracy++ < 10)
 						{
 							delay(10);
 							continue;
@@ -231,7 +235,7 @@ void Wheel::move(int mode, int d = 1)
 
 						isCheck_accuracy = 0;
 						check_num++;
-						printf_serial("check point %d\n", check_num);
+						//printf_serial("check point %d\n", check_num);
 						
 
 						// correct error before entering check point
@@ -241,13 +245,14 @@ void Wheel::move(int mode, int d = 1)
 
 						if (check_num == 1)
 						{
-							forward(MAX_PWM);
-							delay(400);
-							inCheck = false;
-
+							{
+								forward(MAX_PWM);
+								delay(400);
+							}
+							
 							break;
 						}
-						else if (check_num == 4)
+						else if (check_num == 4 || check_num == 14 || check_num == 15)
 						{
 							int stable = 0;
 							forward(200);
@@ -273,6 +278,7 @@ void Wheel::move(int mode, int d = 1)
 						}
 						else if (check_num == 6)
 						{
+							int bend = (check_num == 12) ? 1 : 0;
 							forward(MAX_PWM);
 							delay(100);
 							left(2);
@@ -285,7 +291,7 @@ void Wheel::move(int mode, int d = 1)
 								l += (IN_C >> 6) & 1;// PE5
 								l += (IN_C >> 7) & 1;// PE3
 
-							} while (l);
+							} while (l > bend);
 						}
 						else if (check_num == 7)
 						{
@@ -387,11 +393,9 @@ void Wheel::move(int mode, int d = 1)
 								r += (IN_C >> 1) & 1;// PH6
 
 							} while (r > 1);
-							spin('L');
-							delay(20);
-							while (1);
+
 						}
-						else if (check_num == 2 || check_num == 3 )
+						else if (check_num == 2 || check_num == 3 || check_num == 13)
 						{
 							forward(200);
 
@@ -413,9 +417,39 @@ void Wheel::move(int mode, int d = 1)
 								delay(10);
 							}
 							while (stable < 5);
+
+							//int correct_times = 0;
+							//do
+							//{
+							//	noInterrupts();
+							//	uint8_t IN_C = PINC;
+							//	interrupts();
+							//	l = (IN_C >> 4) & 1;// PE4
+							//	l += (IN_C >> 6) & 1;// PE5
+							//	l += (IN_C >> 7) & 1;// PE3
+							//	r = (IN_C >> 5) & 1;// PH3
+							//	r += (IN_C >> 3) & 1;// PH5
+							//	r += (IN_C >> 1) & 1;// PH6
+
+							//	if (l == r)
+							//		forward(255);
+							//	else if (l > r)
+							//		right(l - r);
+							//	else
+							//		left(r - l);
+							//	delay(10);
+							//} while (correct_times++ < 20);
+
+							if (check_num == 13)
+								break;
 						}
 						// leave task 1
 						else if (check_num == 5)
+						{
+
+						}
+						// put down pen
+						else if (check_num == 16)
 						{
 
 						}
@@ -440,7 +474,7 @@ void Wheel::move(int mode, int d = 1)
 					ll = l;
 					lr = r;
 				}
-				delayMicroseconds(1000);
+				delayMicroseconds(50);
 			}
 		}
 		else if (mode == WHEEL_MOVE_BACK)
@@ -470,27 +504,26 @@ void Wheel::move(int mode, int d = 1)
 		return;
 	}
 }
-void Wheel::forward(int pwm) const
+void Wheel::forward(int pwm) 
 {
-	static bool dir = false;
-	//if (!dir)
+	if (!dir)
 	{
 		digitalWrite(pin.M1, HIGH);
 		digitalWrite(pin.M2, HIGH);
 		dir = true;
 	}
 	analogWrite(pin.MOT_1, pwm);
-	analogWrite(pin.MOT_2, pwm-20);
+	analogWrite(pin.MOT_2, pwm);
 }
-void Wheel::backward(int pwm) const
+void Wheel::backward(int pwm) 
 {
 
 	digitalWrite(pin.M1, LOW);
 	digitalWrite(pin.M2, LOW);
 	
 	analogWrite(pin.MOT_1, pwm);
-	analogWrite(pin.MOT_2, pwm-20);
-
+	analogWrite(pin.MOT_2, pwm);
+	dir = false;
 }
 void Wheel::read_sensor()
 {
@@ -523,7 +556,7 @@ void Wheel::read_sensor()
 #endif // __WHEEL__
 	
 }
-void Wheel::left(int bend) const
+void Wheel::left(int bend) 
 {
 	
 	//analogWrite(pin.MOT_1, MAX_PWM);
@@ -533,7 +566,7 @@ void Wheel::left(int bend) const
 	{
 	case 1:
 		//printf_serial("left 1\n");
-		analogWrite(pin.MOT_1, 150);
+		analogWrite(pin.MOT_1, 255);
 		analogWrite(pin.MOT_2, 0);
 		break;
 	case 2:
@@ -554,7 +587,7 @@ void Wheel::left(int bend) const
 	}
 
 }
-void Wheel::right(int bend) const
+void Wheel::right(int bend) 
 {
 	//analogWrite(pin.MOT_2, MAX_PWM);
 	//analogWrite(pin.MOT_1, 0);
@@ -563,7 +596,7 @@ void Wheel::right(int bend) const
 	{
 	case 1:
 		//printf_serial("right 1\n");
-		analogWrite(pin.MOT_2, 150);
+		analogWrite(pin.MOT_2, 255);
 		analogWrite(pin.MOT_1, 0);
 		break;
 	case 2:
@@ -597,6 +630,7 @@ void Wheel::spin(int dir) const
 	}
 	analogWrite(pin.MOT_1, 150);
 	analogWrite(pin.MOT_2, 150);
+	dir = false;
 }
 #endif
 
