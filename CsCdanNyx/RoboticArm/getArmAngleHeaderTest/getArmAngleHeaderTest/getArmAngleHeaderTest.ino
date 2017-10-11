@@ -45,18 +45,19 @@ void setup() {
 	//----------------OnGoing-----------------------//
 	Arm.initServo();
 
-	Serial.read();
+	while(Serial.read() == -1);
 	Arm.initPosit(300, 0, 300, angSpeed);
-	Serial.print("");
+	Serial.print("Init Complete.");
 
-	Serial.read();
+	while (Serial.read() == -1);
 	Arm.GrabPen(430, 0, 110, step, angSpeed);
-	Serial.print("");
+	Serial.print("GrabPen Finished.");
 
-	Serial.read();
+	while (Serial.read() == -1);
 	Arm.DropPen(400, 50, 250, step, angSpeed);
-	Serial.print("");
+	Serial.print("DropPen Finished.");
 
+	//Serial.println("End Challenge!!");
 }
 
 // the loop function runs over and over again until power down or reset

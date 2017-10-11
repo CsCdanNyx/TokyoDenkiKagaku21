@@ -10,7 +10,7 @@
 #endif
 
 // Enable debugging
-#define DEBUG
+//#define DEBUG
 #define ErrorOut
 //#define ErrorHandle
 
