@@ -10,13 +10,17 @@ void LettersClass::init(char TDKvNFU, float tiltang)
 
 }
 
-void LettersClass::setWord(const String& TDKvNFU)
+void LettersClass::initWord(char TDKvNFU)
 {
-	if (TDKvNFU == "TDK")
+	if (TDKvNFU == 'T')
 	{
-		this->TDKorNFU = "TDK";	// Choose TDK
+		this->TDKorNFU = 'T';	// Choose TDK
 		
 		// Letter T
+		this->letterOne->LetOrigin[0] = 380;
+		this->letterOne->LetOrigin[1] = -65;
+		this->letterOne->LetOrigin[2] = 340;
+
 		this->letterOne->letSize = 4;
 		this->letterOne->letPts = new LetterPts[this->letterOne->letSize]{
 			{ 'd',{  -10, -10,  -10 } },
@@ -25,6 +29,10 @@ void LettersClass::setWord(const String& TDKvNFU)
 			{ 'u',{ -155,  65, -155 } }
 		};
 		// Letter D
+		this->letterOne->LetOrigin[0] = 380;
+		this->letterOne->LetOrigin[1] = -65;
+		this->letterOne->LetOrigin[2] = 340;
+
 		this->letterTwo->letSize = 10;
 		this->letterTwo->letPts = new LetterPts[this->letterTwo->letSize]{
 			{ 'd',{   10,     10,   10 } },
@@ -50,9 +58,9 @@ void LettersClass::setWord(const String& TDKvNFU)
 
 
 	}
-	else if (TDKvNFU == "NFU")
+	else if (TDKvNFU == 'N')
 	{
-		this->TDKorNFU = "NFU";	// Choose NFU
+		this->TDKorNFU = 'N';	// Choose NFU
 		// Letter N
 
 		// Letter F
@@ -64,16 +72,16 @@ void LettersClass::setWord(const String& TDKvNFU)
 		Serial.println("??");
 }
 
-void LettersClass::initLetter(char clet, float tiltang, float letOriginPoint[3])
+void LettersClass::initLetter(char clet, float tiltang)
 {
 	currentLetter = getALetter(clet);
 	for (size_t i = 0; i < currentLetter->letSize; i++)
 	{
-		currentLetter->letPts[i].pts[0] = letOriginPoint[0] + currentLetter->letPts[i].pts[0] * sin(tiltang);
-		currentLetter->letPts[i].pts[1] = letOriginPoint[1] + currentLetter->letPts[i].pts[1];
-		currentLetter->letPts[i].pts[2] = letOriginPoint[2] + currentLetter->letPts[i].pts[2] * cos(tiltang);
+		currentLetter->letPts[i].pts[0] = currentLetter->LetOrigin[0] + currentLetter->letPts[i].pts[0] * sin(tiltang);
+		currentLetter->letPts[i].pts[1] = currentLetter->LetOrigin[1] + currentLetter->letPts[i].pts[1];
+		currentLetter->letPts[i].pts[2] = currentLetter->LetOrigin[2] + currentLetter->letPts[i].pts[2] * cos(tiltang);
 	}
-	*currentLetter->iterPtr = 0;
+	currentLetter->iterPtr = new size_t();
 }
 
 void LettersClass::ADDpts(float despts[3], float srcpts[3], float px, float py, float pz)
@@ -85,13 +93,13 @@ void LettersClass::ADDpts(float despts[3], float srcpts[3], float px, float py, 
 
 LettersClass::aLetter * LettersClass::getALetter(char clet)
 {
-	if (this->TDKorNFU == "TDK")
+	if (this->TDKorNFU == 'T')
 	{
 		if (clet == 'T')		return this->letterOne;
 		else if (clet == 'D')		return this->letterTwo;
 		else if (clet == 'K')		return this->letterThree;
 	}
-	else if (this->TDKorNFU == "NFU")
+	else if (this->TDKorNFU == 'N')
 	{
 		if (clet == 'N')		return this->letterOne;
 		else if (clet == 'F')		return this->letterTwo;
@@ -102,20 +110,26 @@ LettersClass::aLetter * LettersClass::getALetter(char clet)
 }
 
 /*----------------------------Print and Show----------------------------------*/
-void LettersClass::showLetterStrokes(bool printLift, const String& title)
+void LettersClass::showLetterStrokes(uint8_t No, bool printLift, const String& title)
 {
-	if (this->TDKorNFU == "TDK")
+	if (this->TDKorNFU == 'T')
 	{
-		printOut(this->letterOne, true, title + "Letter T");
-		printOut(this->letterTwo, true, title + "Letter D");
-		//printOut(this->letterThree, true, title + "Letter K");
+		if (No == 1 || No == 4)
+			printOut(this->letterOne, true, title + "Letter T");
+		else if (No == 2 || No == 4)
+			printOut(this->letterTwo, true, title + "Letter D");
+		else if (No == 3 || No == 4)
+			printOut(this->letterThree, true, title + "Letter K");
 	}
-	else if (this->TDKorNFU == "NFU")
+	else if (this->TDKorNFU == 'N')
 	{
 		Serial.println("NNNN");
-		//printOut(this->letterOne, true, title + "Letter N");
-		//printOut(this->letterTwo, true, title + "Letter F");
-		//printOut(this->letterThree, true, title + "Letter U");
+		if (No == 1 || No == 4)
+			printOut(this->letterOne, true, title + "Letter N");
+		else if (No == 2 || No == 4)
+			printOut(this->letterTwo, true, title + "Letter F");
+		else if (No == 3 || No == 4)
+			printOut(this->letterThree, true, title + "Letter U");
 	}
 	else
 		Serial.println("???");
@@ -138,6 +152,17 @@ void LettersClass::printOut(aLetter * alet, bool printLift, const String& Hstrin
 	Serial.println();
 }
 
+void LettersClass::iterPrint()
+{
+	//Serial.println(String(clet) + "\'s Pts:");
+	do
+	{
+		float * tmppts;
+		tmppts = getLetPts();
+		Serial.print(String(tmppts[0], 3) + ", " + String(tmppts[1], 3) + ", " + String(tmppts[2], 3) + "\n");
+	} while (nextPoint());
+}
+
 /*----------------------------Return Points-----------------------------------*/
 float * LettersClass::getLetPts()
 {
@@ -151,9 +176,19 @@ char LettersClass::getLetLift()
 
 bool LettersClass::nextPoint()
 {
+	/*if (*currentLetter->iterPtr == 0)
+	{
+		Serial.print("Size: ");
+		Serial.println(currentLetter->letSize);
+	}*/
+
 	if (++(*currentLetter->iterPtr) >= currentLetter->letSize)
+	{
+		delete currentLetter->iterPtr;
+		currentLetter->iterPtr = nullptr;
 		return false;
-	currentLetter->iterPtr = nullptr;
+	}
+	//Serial.println(*currentLetter->iterPtr);
 	return true;
 }
 

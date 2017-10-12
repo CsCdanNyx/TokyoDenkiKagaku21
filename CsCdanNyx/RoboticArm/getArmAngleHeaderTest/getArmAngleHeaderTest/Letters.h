@@ -10,7 +10,9 @@
 #endif
 
 /// Duplicated defines needed configurations.
+/// 
 #define DegPrecision	3			// Preferred: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
+#define MM2UNIT			0.8f
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -30,6 +32,7 @@ class LettersClass
 	 struct aLetter
 	 {
 		 //char clet;
+		 float LetOrigin[3];		// Letter origin on arm's coordinate.
 		 size_t letSize;
 		 LetterPts * letPts = nullptr;
 		 size_t * iterPtr = nullptr;
@@ -39,15 +42,16 @@ class LettersClass
 
 	void init(char TDKvNFU, float tiltang);
 
-	void setWord(const String& TDKvNFU);
-	void initLetter(char alet, float tiltang, float letOriginPoint[3]);
+	void initWord(char TDKvNFU);
+	void initLetter(char alet, float tiltang);
 
 	//friend class RoboticArmClass;
 
 	/*----------------------------Print and Show----------------------------------*/
-	void showLetterStrokes(bool printLift = true, const String& title = String());
+	void showLetterStrokes(uint8_t No = 4, bool printLift = true, const String& title = String());
 	void printOut(aLetter * alet, bool printLift = true, const String& Hstring = String(), const char * split = ",");
 	
+	void iterPrint();
 	//void ADDpts(float despts[3], float srcpts[3], float px, float py, float pz);
 
 	/*----------------------------Return Points-----------------------------------*/
@@ -56,7 +60,7 @@ class LettersClass
 	bool nextPoint();		// Iterate to current Letter's next point. If next null, return false.
 
  private:
-	 String TDKorNFU;
+	 char TDKorNFU;
 
 	 aLetter * letterOne   = new aLetter;
 	 aLetter * letterTwo   = new aLetter;

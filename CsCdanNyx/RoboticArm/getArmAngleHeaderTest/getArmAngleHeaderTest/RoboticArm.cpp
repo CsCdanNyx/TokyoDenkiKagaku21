@@ -245,12 +245,17 @@ bool RoboticArmClass::isAngExcess(float * Ang, bool setError)
 	{
 		if ((baseDegree[i] + Ang[i]) > 180 || (baseDegree[i] + Ang[i]) < 0)
 		{
-			if (setError)
+			if (setError && this->ERRcode != 1)
 				this->ERRcode = 1;
-			return true;
+#ifdef ErrorOut
+			Serial.println(String("J") + i + " :" + String(baseDegree[i] + Ang[i]));
+#endif // ErrorOut
 		}
 	}
 
+	if (this->ERRcode == 1)
+		return true;
+	
 	return false;
 }
 
@@ -439,7 +444,7 @@ void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 	servoAct();
 }
 
-/*-------------------------------Challenge--------------------------------------*/
+// H2 /*-------------------------------Challenge--------------------------------------*/
 /**------------------Grab Marker Pen-------------------------**/
 int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, float angspeed)
 {
@@ -528,37 +533,39 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #endif // DEBUG
 
 	// Detect the end of the pen alone z-axis
-	delay(1000);
-	for (size_t i = 0; i < 200; i++)
+	if (!notDetected)
 	{
-		armGoLine(this->x, this->y, this->z + 0.5, step / 2);
-		notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
-#ifdef DEBUG
-		//Serial.println(notDetected?"not":"yes");
-#endif // DEBUG			
-		if (notDetected) {
-			delay(1000);
+		delay(1000);
+		for (size_t i = 0; i < 200; i++)
+		{
+			armGoLine(this->x, this->y, this->z + 0.5, step / 2);
 			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+#ifdef DEBUG
+			//Serial.println(notDetected?"not":"yes");
+#endif // DEBUG			
 			if (notDetected)
 			{
+				delay(1000);
+				notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+				if (notDetected)
+				{
 #ifdef DEBUG
-				Serial.println("End of the Pen at Z.");
-				//showJ("EndZ:\t");
+					Serial.println("End of the Pen at Z.");
+					//showJ("EndZ:\t");
 #endif // DEBUG					
-				
-				armGoLine(this->x, this->y, this->z - 0.5 - GrabPtUpperBoundfromEnd, step / 2);
-				break;
+					armGoLine(this->x, this->y, this->z - 0.5 - GrabPtUpperBoundfromEnd, step / 2);
+					break;
+				}
 			}
 		}
+
+#ifdef DEBUG	
+		Serial.println("Z finished!!");
+		//showJ("CatchZ:\t");
+#endif // DEBUG	
 	}
 
 	digitalWrite(OPTIC_ENABLE_Y_PIN, LOW);
-
-#ifdef DEBUG	
-	Serial.println("Z finished!!");
-	showJ("CatchZ:\t");
-#endif // DEBUG	
-
 	// y-axis compensate positioning
 	armGoLine(this->x, this->y + offsetY, this->z, step / 2);		// y offset between detector and clamp.
 
@@ -661,7 +668,7 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 	return 1;
 }
 
-/**----------------------Writing-----------------------------**/
+// H3 /**----------------------Writing-----------------------------**/
 void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
 {
 	if (UpvDn == 'u')
@@ -686,11 +693,70 @@ void RoboticArmClass::setPenLift(float * Ang, char UpvDn, float penAng)
 	}
 }
 
-void RoboticArmClass::chooseWord(const String & TDKorNFU)
+void RoboticArmClass::chooseWord(char TDKorNFU)
 {
-	Letters.setWord(TDKorNFU);
+	Letters.initWord(TDKorNFU);
 }
 
+void RoboticArmClass::writeLetter(char clet)
+{
+	//uint8_t PenNibClawDIS = 145 - 67 - 10;			// Pen length - work point and interruptor - distance to the end of the pen.
+	this->tiltAngle = 60 / Rad2Degree;
+	float liftHeight[2] = { -10 * sin(this->tiltAngle), 10 * cos(this->tiltAngle) };	// Lift Pen Height for x and z.
+	bool isUP = false;		// Is pen up or down.
+
+	armGoDirect(this->initXYZ);
+	Letters.initLetter(clet, M_PI_2 - this->tiltAngle);
+	
+	armGoLine(Letters.getLetPts());
+#ifdef DEBUG
+	showXYZ("Start Writing!!\n");
+#endif // DEBUG
+
+	while (Letters.nextPoint())
+	{
+		if (!isUP)
+		{
+			armGoLine(Letters.getLetPts());
+#ifdef DEBUG
+			showXYZ("GW ");
+#endif // DEBUG
+		}
+		else
+		{
+			float * tmppts = Letters.getLetPts();
+			armGoLine(tmppts[0] + liftHeight[0], tmppts[1], tmppts[2] + liftHeight[1]);
+#ifdef DEBUG
+			showXYZ("GH ");
+#endif // DEBUG
+			armGoLine(tmppts);
+			isUP = false;
+#ifdef DEBUG
+			showXYZ("Dn ");
+#endif // DEBUG
+		}
+		
+		if (Letters.getLetLift() == 'u')
+		{
+			armGoLine(this->x + liftHeight[0], this->y, this->z + liftHeight[1]);
+			isUP = true;
+#ifdef DEBUG
+			showXYZ("Up ");
+#endif // DEBUG
+		}
+
+#ifdef DEBUG
+		//showXYZ();
+#endif // DEBUG
+	}
+
+	armGoDirect((float*)this->initXYZ);
+#ifdef DEBUG
+	showXYZ("Finished Writing!!");
+#endif // DEBUG
+}
+
+/*
 void RoboticArmClass::writeLetter(char clet, float LetOrigin[3], float tilt)
 {
 	armGoDirect(initPoint);
@@ -709,6 +775,7 @@ void RoboticArmClass::writeLetter(char clet, float LetOrigin[3], float tilt)
 		}
 	}
 }
+*/
 
 /*----------------------------Print and Show----------------------------------*/
 void RoboticArmClass::showJ(const char * title)

@@ -10,8 +10,8 @@
 #endif
 
 // Enable debugging
-//#define DEBUG
-#define ErrorOut
+#define DEBUG
+//#define ErrorOut
 //#define ErrorHandle
 #define TEST
 
@@ -116,10 +116,11 @@ class RoboticArmClass
 	
 	/**----------------------Writing-----------------------------**/
 	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
-	
 	void setPenLift(float * Ang, char UpvDn, float penAng);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
-	void chooseWord(const String& TDKorNFU);
-	void writeLetter(char clet, float LetOrigin[3], float tilt);
+
+	void chooseWord(char TDKorNFU);
+	void writeLetter(char clet);
+	//void writeLetter(char clet, float LetOrigin[3], float tilt);
 	
 	/*----------------------------Print and Show----------------------------------*/
 	void showJ(const char * title = NULL);
@@ -132,7 +133,7 @@ class RoboticArmClass
 	//float * getXYZ();
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
-
+	float tiltAngle = 0;						// alpha		// The angle ( in Radian!!! ) of inclination of the plane which the Claw parallels to.
 	//float x = initPoint[0], y = initPoint[1], z = initPoint[2];						// Position coordinate.
 
 private:
@@ -145,8 +146,7 @@ private:
 	float J[6] = { -75, 0, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
 	//float J[6] = { 0, 0, 90, 0, 40, 0 };
 
-	//float tiltAngle = 0;						// alpha		// The angle of inclination of the plane which the Claw parallels to.
-	float tiltAngle = 0 / Rad2Degree;			// alpha		// The angle of inclination of the plane which the Claw parallels to.
+	//float tiltAngle = 0;						// alpha		// The angle ( in Radian!!! ) of inclination of the plane which the Claw parallels to.
 
 	Servo servoAR[6];
 

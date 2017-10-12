@@ -25,14 +25,24 @@ void setup() {
 	Arm.showXYZ("init Posit:\t");
 	Arm.waitkey();
 
+	//Arm.armGoLine(327.125, -27.125, 311.334);
+	//Arm.tiltAngle = 60 / Rad2Degree;
+	//Arm.armGoDirect(300, 0, 300);
+	//Arm.armGoLine(327.125, -27.125, 350);
+	
 	//// Letter.h test
-	Letters.setWord("TDK");
-	Letters.showLetterStrokes(true, "HAHAHA\t");
-	float initPoint[3] = { 10, 10, 10 };
-	Letters.initLetter('T', 30, initPoint);
-	Letters.initLetter('D', 30, initPoint);
-	Letters.showLetterStrokes();
+	//Letters.initWord('T');
+	//Letters.showLetterStrokes(4, true, "setup word:\n");
+	//Letters.initLetter('T', M_PI_2 - 60 / Rad2Degree);
 
+
+	//Letters.iterPrint();
+	//Letters.initLetter('D', M_PI_2 - 60 / Rad2Degree);
+	//Letters.showLetterStrokes(1, true, "After init:\n");
+
+
+	Arm.chooseWord('T');
+	Arm.writeLetter('D');
 
 
 	Arm.showJ("\nEnding J: ");
