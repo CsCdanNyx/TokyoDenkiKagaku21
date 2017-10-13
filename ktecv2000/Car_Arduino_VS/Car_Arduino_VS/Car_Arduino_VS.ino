@@ -1,6 +1,6 @@
 #include "printf.h"
 #include "car.h"
-#include <Timer1\TimerOne.h>
+//#include <Timer1\TimerOne.h>
 #include "RoboticArm.h"
 struct
 {
@@ -165,7 +165,7 @@ void test_4_read_sensor()
 }
 void test_5_line_follow_and_check_point()
 {
-	car.wheel->setCheckNum(1);
+	car.wheel->setCheckNum(Car::CHECK_POINT_7_rCURVE);
 	car.wheel->move1();
 }
 

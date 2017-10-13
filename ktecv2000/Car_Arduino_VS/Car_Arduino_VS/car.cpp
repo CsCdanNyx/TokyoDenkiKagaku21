@@ -1,6 +1,6 @@
 #include "car.h"
 #include "printf.h"
-#include <Timer1\TimerOne.h>
+//#include <Timer1\TimerOne.h>
 
 static volatile unsigned long teeth = 0;
 static volatile unsigned long t = 0;
@@ -34,10 +34,10 @@ void Car::setCheckNum(uint8_t ch)
 	check_num = ch;
 	if (check_num <= CHECK_POINT_4_KNOCK || check_num >= CHECK_POINT_12_rSPIN)
 		move_mode = MOVE_MODE_GENERAL;
-	else if (check_num == CHECK_POINT_7_rCURVE || check_num == CHECK_POINT_8_rCURVE)
+	else //if (check_num == CHECK_POINT_7_rCURVE || check_num == CHECK_POINT_8_rCURVE)
 		move_mode = MOVE_MODE_BIG_TURN;
-	else
-		move_mode = MOVE_MODE_SMALL_TURN;
+	//else
+		//move_mode = MOVE_MODE_SMALL_TURN;
 
 	//check_num++;
 }
@@ -58,7 +58,7 @@ bool Wheel::inCheckPoint()
 {
 	uint8_t ch;
 	static int stable_check_times = 0;
-	while (stable_check_times < 5 && stable_check_times > -5)
+	//while (stable_check_times < 5 && stable_check_times > -5)
 	{
 		noInterrupts();
 		uint8_t IN_C = PINC;
@@ -79,10 +79,12 @@ bool Wheel::inCheckPoint()
 		}
 		delay(1);
 	}
-	stable_check_times = 0;
 
-	if (stable_check_times >= 4 || stable_check_times <= -6)
+	if (stable_check_times >= 5)
+	{
+		stable_check_times = 0;
 		return true;
+	}
 	else
 		return false;
 
@@ -382,18 +384,19 @@ void Wheel::forward(uint8_t pwm = 0)
 			digitalWrite(pin.M2, HIGH);
 			dir = FORWARD;
 		}
-		if (move_mode = MOVE_MODE_GENERAL)
+		if (move_mode == MOVE_MODE_GENERAL)
 		{
 			analogWrite(pin.MOT_1, MAX_PWM);
 			analogWrite(pin.MOT_2, MAX_PWM);
 		}
-		else if (move_mode = MOVE_MODE_SMALL_TURN)
+		else if (move_mode == MOVE_MODE_SMALL_TURN)
 		{
-			analogWrite(pin.MOT_1, 200);
-			analogWrite(pin.MOT_2, 200);
+			analogWrite(pin.MOT_1, 170);
+			analogWrite(pin.MOT_2, 170);
 		}
-		else if (move_mode = MOVE_MODE_BIG_TURN)
+		else if (move_mode == MOVE_MODE_BIG_TURN)
 		{
+
 			analogWrite(pin.MOT_1, 130);
 			analogWrite(pin.MOT_2, 130);
 		}
