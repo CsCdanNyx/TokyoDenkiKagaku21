@@ -26,11 +26,12 @@
 #define servoPin4	6
 #define servoPin5	7
 
-//// Interrupt Pin
+//// Optic settings
 #define OPTIC_Y_INPUT_PIN  8
 #define OPTIC_X_INPUT_PIN  9
 #define OPTIC_ENABLE_Y_PIN 15
 #define OPTIC_ENABLE_X_PIN 14
+#define OPTIC_DELAY		  800
 
 // Some parameters could be set
 #ifdef TEST
@@ -45,7 +46,7 @@
 #define SERVODELAY		0			// Preferred: 0 by reason of servos' vibration (Due to interrupt triggering). Function servoAct's delaying.
 
 
-const float CM2UNIT = 10;					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
+const float CM2UNIT = 10;			// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
 const float PenGrabHeight = 7 * CM2UNIT;
 
@@ -57,6 +58,7 @@ const float Rad2Degree = 180 / M_PI;
 #define SIZEOF_ARRAY(array) (sizeof(array)/sizeof(*array))
 
 #include "Servo.h"
+
 
 class RoboticArmClass
 {
@@ -97,6 +99,10 @@ public:
 	void armGoTo(float xp, float yp, float zp);							// Arm move to point.
 	void armGoLine(float xd, float yd, float zd, float step = STEPSPEED);			// Move to destination linearly.
 	void armGoDirect(float xd, float yd, float zd, float angSpeed = ANGULARSPEED);		// Move to destination directly and angularly by changing angle per angSpeed degree.
+	/***--------------------Overload---------------------***/
+	void armGoLine(float desXYZ[3], float step = STEPSPEED);
+	void armGoDirect(float desXYZ[3], float angSpeed = ANGULARSPEED);
+	
 	/**-----------------------Claw--------------------------------**/
 	void clawClamp(float * Ang, char RelvClp);		// Release or Clamp the clamp. RelvClp: 'r' for release, 'c' for clamp.
 
@@ -126,9 +132,9 @@ public:
 
 private:
 	float initXYZ[3];
-	float baseDegree[6] = { 90, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
+	float baseDegree[6] = { 98, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
 	float x = 0, y = 0, z = 0;							// Position coordinate.
-	float J[6] = { -75, 0, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
+	float J[6] = { -88, -5, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
 	//float J[6] = { 0, 0, 90, 0, 40, 0 };
 	float tiltAngle = 0;			// alpha			// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];

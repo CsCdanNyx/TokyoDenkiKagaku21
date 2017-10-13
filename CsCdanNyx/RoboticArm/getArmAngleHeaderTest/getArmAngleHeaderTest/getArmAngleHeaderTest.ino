@@ -41,21 +41,20 @@ void setup() {
 	*/
 
 
-
 	//----------------OnGoing-----------------------//
 	Arm.initServo();
 
 	while(Serial.read() == -1);
 	Arm.initPosit(300, 0, 300);
-	Serial.print("Init Complete.");
+	Serial.println("Init Complete.");
 
 	while (Serial.read() == -1);
 	Arm.GrabPen(430, 0, 110);
-	Serial.print("GrabPen Finished.");
+	Serial.println("GrabPen Finished.");
 
-	//while (Serial.read() == -1);
-	//Arm.DropPen(400, 50, 250);
-	//Serial.print("DropPen Finished.");
+	while (Serial.read() == -1);
+	Arm.DropPen(400, 50, 250);
+	Serial.println("DropPen Finished.");
 
 	//Serial.println("End Challenge!!");
 }

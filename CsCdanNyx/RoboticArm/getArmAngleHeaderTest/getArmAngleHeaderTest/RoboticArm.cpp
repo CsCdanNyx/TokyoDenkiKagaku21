@@ -397,6 +397,18 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 #endif // DEBUG
 
 }
+
+/***--------------------Overload---------------------***/
+void RoboticArmClass::armGoLine(float desXYZ[3], float step)
+{
+	armGoLine(desXYZ[0], desXYZ[1], desXYZ[2], step);
+}
+
+void RoboticArmClass::armGoDirect(float desXYZ[3], float angSpeed)
+{
+	armGoDirect(desXYZ[0], desXYZ[1], desXYZ[2], angSpeed);
+}
+
 /**-----------------------Claw--------------------------------**/
 void RoboticArmClass::clawClamp(float * Ang, char RelvClp)
 {
@@ -439,6 +451,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Release");
 #endif // DEBUG
+	armGoDirect(initXYZ, angspeed);
 	clawClamp(J, 'r');
 
 	// Initial position for optic detection
@@ -458,17 +471,20 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	digitalWrite(OPTIC_ENABLE_Y_PIN, HIGH);
 	pinMode(OPTIC_Y_INPUT_PIN, INPUT);
 	delay(500);
+	
 	for (float i = 0; i < 140; i += 0.5f)
 	{
 		armGoLine(this->x, this->y - 0.5f, this->z, step);
 		notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 		if (!notDetected) {
-			delay(1000);
+			delay(OPTIC_DELAY);
 			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 			if (!notDetected)
 			{
 #ifdef DEBUG
+				//Serial.println(i);
 				Serial.println("interruptY");
+				//showXYZ("interruptY\n");
 #endif // DEBUG
 				break;
 			}
@@ -484,14 +500,15 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 			armGoLine(this->x, this->y + 0.5f, this->z, step);
 			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 			if (!notDetected) {
-				delay(1000);
+				delay(OPTIC_DELAY);
 				notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 				if (!notDetected)
 				{
 #ifdef DEBUG
-					Serial.println("interruptY");
+					Serial.println(i);
+					Serial.println("2ndInterruptY");
+					//showXYZ("2ndInterruptY\n");
 #endif // DEBUG
-					break;
 				}
 			}
 		}
@@ -505,7 +522,8 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	//digitalWrite(OPTIC_ENABLE_Y_PIN, LOW);
 
 #ifdef DEBUG
-	Serial.println("Y finished!!");
+	//Serial.println("Y finished!!");
+	//showXYZ("Y finished!\n");
 	//showJ("InY:\t");
 #endif // DEBUG
 
@@ -518,8 +536,9 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 		//Serial.println(notDetected?"not":"yes");
 #endif // DEBUG			
-		if (notDetected) {
-			delay(1000);
+		if (notDetected)
+		{
+			delay(OPTIC_DELAY);
 			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 			if (notDetected)
 			{
@@ -538,11 +557,11 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 
 #ifdef DEBUG	
 	Serial.println("Z finished!!");
-	showJ("CatchZ:\t");
+	//showJ("CatchZ:\t");
 #endif // DEBUG	
 
 	// y-axis compensate positioning
-	armGoLine(this->x, this->y + offsetY, this->z, step / 2);		// y offset between detector and clamp.
+	armGoLine(this->x, (this->y > (70 - offsetY) ? this->y : (this->y + offsetY)), this->z, step / 2);		// y offset between detector and clamp.
 
 #ifdef DEBUG
 	//showJ("CatchY:\t");
@@ -554,8 +573,9 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	digitalWrite(OPTIC_ENABLE_X_PIN, HIGH);
 	pinMode(OPTIC_X_INPUT_PIN, INPUT);
 	delay(1000);
-
-	for (float i = 0; i < 600; i++)
+	
+	size_t x_max = 550 - abs(this->y) * 2.17f;		// Prevent too much x movement to y
+	for (size_t i = 0; i < x_max; i++)
 	{
 		armGoLine((this->x + 0.2), this->y, this->z, step / 2);
 #ifdef DEBUG
@@ -604,13 +624,17 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 	Serial.println("X finished, lift up!!");
 	//showJ("before lift: ");
+	//showXYZ("be lifted:");
 #endif // DEBUG	
-	
+
 	clawClamp(J, 'g');
+	if (abs(this->y) > 68.5f)				// Prevent too much z movement to edged y
+		liftPenHeight = 42;
 	armGoLine(this->x, this->y, (this->z + liftPenHeight), step);
 
 #ifdef DEBUG
-	Serial.println("Grabbed, go back!!");
+	//Serial.println("Grabbed, go back!!");
+	showXYZ("Grabbed, go back!!\n");
 #endif // DEBUG	
 	
 	//armGoLine(initxyz[0], initxyz[1], initxyz[2], step);
@@ -637,7 +661,7 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 #endif // DEBUG	
 
 	clawClamp(J, 'r');
-	delay(500);
+	delay(1000);
 	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angSpeed);
 
 	return 1;
