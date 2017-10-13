@@ -455,11 +455,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	clawClamp(J, 'r');
 
 	// Initial position for optic detection
-	/*
-	armGoLine(this->x, this->y, this->z, step);
-	armGoLine(this->x, this->y, penZ + 10, step);
-	armGoLine(this->x, (this->y + 70.5), this->z, step);
-	*/
 	armGoDirect(this->x, (this->y + 70), penZ + 10, angspeed);
 #ifdef DEBUG
 	Serial.println("Posit ready for grab!!");
@@ -482,7 +477,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 			if (!notDetected)
 			{
 #ifdef DEBUG
-				//Serial.println(i);
 				Serial.println("interruptY");
 				//showXYZ("interruptY\n");
 #endif // DEBUG
@@ -505,7 +499,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 				if (!notDetected)
 				{
 #ifdef DEBUG
-					Serial.println(i);
 					Serial.println("2ndInterruptY");
 					//showXYZ("2ndInterruptY\n");
 #endif // DEBUG
@@ -668,15 +661,6 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 }
 
 /**----------------------Writing-----------------------------**/
-void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
-{
-	if (UpvDn == 'u')
-		Ang[4] += penliftAng;
-	else
-		Ang[4] -= penliftAng;
-
-	servoAct();
-}
 
 /*----------------------------Print and Show----------------------------------*/
 void RoboticArmClass::showJ(const char * title)
@@ -717,19 +701,6 @@ void RoboticArmClass::showXYZ(const char * title, bool XYZdisp)
 	//}
 }
 
-/*
-float * RoboticArmClass::getJ()
-{
-	return J;
-}
-
-float * RoboticArmClass::getXYZ()
-{
-	float P[3] = { x, y, z };
-	return P;
-}
-*/
-
 void RoboticArmClass::printOut(float * AR, size_t ARsize, const char * Hstring, const char * split)
 {
 	if (Hstring)
@@ -747,34 +718,5 @@ void RoboticArmClass::printOut(float n, const char * Hstring, const char * endSt
 	Serial.print(String(n, DegPrecision) + endString);
 }
 
-/**-----------Unused--------------*/
-/*
-void RoboticArmClass::Jzero()
-{
-	for (size_t i = 0; i < 6; i++)
-		J[i] = 0;
-}
-*/
-
-//void RoboticArmClass::moveArmPath(float xd, float yd, float zd, float speed)
-//{
-//	float vec[3] = { xd - x, yd - y, zd - z };
-//
-//	for (size_t i = 0; i < 3; i++)
-//		vec[i] = vec[i] / sqrt(pow(xd - x, 2) + pow(yd - y, 2) + pow(zd - z, 2)) * speed;
-//
-//	while (x != xd || y != yd || z != zd)
-//	{
-//		getArmAngleDeg(x, y, z, J);
-//
-//		this->x += vec[0];
-//		this->y += vec[1];
-//		this->z += vec[2];
-//	}
-//	getArmAngleDeg(xd, yd, zd, J);
-//	this->x = xd;
-//	this->y = yd;
-//	this->z = zd;
-//}
 
 RoboticArmClass Arm;
