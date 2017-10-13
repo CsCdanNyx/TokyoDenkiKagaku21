@@ -10,9 +10,12 @@
 #endif
 
 // Enable debugging
-//#define DEBUG
+#define DEBUG
 #define ErrorOut
 //#define ErrorHandle
+#define TEST
+
+
 
 // Pin settings
 //// Servo's Pin settings
@@ -30,8 +33,14 @@
 #define OPTIC_ENABLE_X_PIN 14
 
 // Some parameters could be set
-#define STEPSPEED		0.18f
-#define ANGULARSPEED	0.025f
+#ifdef TEST
+	#define STEPSPEED		2
+	#define ANGULARSPEED	2
+#else
+	#define STEPSPEED		0.18f
+	#define ANGULARSPEED	0.025f
+#endif // TEST
+
 #define DegPrecision	3			// Preferred: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define SERVODELAY		0			// Preferred: 0 by reason of servos' vibration (Due to interrupt triggering). Function servoAct's delaying.
 
@@ -48,7 +57,6 @@ const float Rad2Degree = 180 / M_PI;
 #define SIZEOF_ARRAY(array) (sizeof(array)/sizeof(*array))
 
 #include "Servo.h"
-#include <TimerOne.h>
 
 class RoboticArmClass
 {
