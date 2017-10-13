@@ -19,6 +19,8 @@
 //#define ErrorHandle
 #define TEST
 
+
+
 // Pin settings
 //// Servo's Pin settings
 #define servoPin0	2
@@ -28,14 +30,15 @@
 #define servoPin4	6
 #define servoPin5	7
 
-//// Interrupt Pin
+//// Optic settings
 #define OPTIC_Y_INPUT_PIN  8
 #define OPTIC_X_INPUT_PIN  9
 #define OPTIC_ENABLE_Y_PIN 15
 #define OPTIC_ENABLE_X_PIN 14
+#define OPTIC_DELAY		  800
 
 // Some parameters could be set
-#if defined TEST
+#ifdef TEST
 	#define STEPSPEED		2
 	#define ANGULARSPEED	2
 #else
@@ -43,12 +46,11 @@
 	#define ANGULARSPEED	0.025f
 #endif // TEST
 
-
 #define DegPrecision	3			// Preferred: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
 #define SERVODELAY		0			// Preferred: 0 by reason of servos' vibration (Due to interrupt triggering). Function servoAct's delaying.
 
 
-const float CM2UNIT = 10;					// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
+const float CM2UNIT = 10;			// Defines how many coordinate units in 1 cm (1unit ~= 1mm).
 // Pen
 const float PenGrabHeight = 7 * CM2UNIT;
 
@@ -137,17 +139,13 @@ class RoboticArmClass
 	//float * getXYZ();
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
-	//float x = initPoint[0], y = initPoint[1], z = initPoint[2];						// Position coordinate.
 
 private:
 	Servo servoAR[6];
 	float initXYZ[3];
-	float baseDegree[6] = { 90, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
-
+	float baseDegree[6] = { 98, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
 	float x = 0, y = 0, z = 0;							// Position coordinate.
-	//float x = initPoint[0], y = initPoint[1], z = initPoint[2];						// Position coordinate.
-
-	float J[6] = { -75, 0, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
+	float J[6] = { -88, -5, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
 	//float J[6] = { 0, 0, 90, 0, 40, 0 };
 	float tiltAngle = 0;						// alpha		// The angle ( in Radian!!! ) of inclination of the plane which the Claw parallels to.
 

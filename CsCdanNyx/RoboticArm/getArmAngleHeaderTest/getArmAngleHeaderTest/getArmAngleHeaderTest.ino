@@ -7,10 +7,11 @@
 // the setup function runs once when you press reset or power the board
 #include "Letters.h"
 #include "RoboticArm.h"
-
-float step = 0.18f;				// Preferred: 0.25 with DegPrecision 3. Step speed for armGoLine.
-float angSpeed = 0.025f;		// Preferred: 1 with DegPrecision 3. Angular step for armGoDirect.
-
+//float step = 0.18f;				// Preferred: 0.25 with DegPrecision 3. Step speed for armGoLine.
+//float angSpeed = 0.025f;		// Preferred: 1 with DegPrecision 3. Angular step for armGoDirect.
+//
+//float teststep = 2;
+//float testang = 2;
 
 void setup() {
 
