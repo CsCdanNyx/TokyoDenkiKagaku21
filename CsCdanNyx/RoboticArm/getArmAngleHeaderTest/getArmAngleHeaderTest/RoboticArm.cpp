@@ -4,12 +4,6 @@
 
 #include "RoboticArm.h"
 
-///*----------------------------Arm's settings----------------------------------*/
-//RoboticArmClass::RoboticArmClass()
-//{
-//
-//}
-
 /*--------------------------Initializations----------------------------------*/
 void RoboticArmClass::initServo()
 {
@@ -38,132 +32,6 @@ int RoboticArmClass::initPosit(float ix, float iy, float iz, float angSpeed)
 	return 1;
 }
 
-int RoboticArmClass::ArmErrorHandle()
-{
-	if (this->ERRcode > 0)
-	{
-#ifdef ErrorOut
-		Serial.println(String("*** EXIT with ERRcode : ") + this->ERRcode + " . ***");
-#endif // ErrorOut
-#ifdef DEBUG
-		showJ("ExitJ: ");
-#endif // DEBUG
-		this->ERRcode = -1;
-		armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], ANGULARSPEED);
-#ifdef ErrorOut
-		Serial.println("Finished Error Handling!!");
-#endif // ErrorOut
-		Serial.flush();
-		exit(EXIT_FAILURE);
-	}
-
-	return 0;
-}
-///// Debugging ///////////////////////////
-
-void RoboticArmClass::setJ(float * Ang)
-{
-	for (size_t i = 0; i < 6; i++)
-	{
-		J[i] = Ang[i];
-	}
-}
-
-void RoboticArmClass::servoInit()
-{
-	for (int i = 0; i < 6; i++) {
-		servoAR[i].attach(i + 2, 500, 2400);
-	}
-}
-
-void RoboticArmClass::servoDoJ()
-{
-	for (int i = 0; i < 6; i++) {
-		servoAR[i].write(J[i]);
-	}
-#if SERVODELAY
-	delay(SERVODELAY);
-#endif // SERVODELAY
-}
-
-void RoboticArmClass::waitkey()
-{
-	while (Serial.read() != -1);
-	while (Serial.read() == -1);
-}
-
-int RoboticArmClass::serialReadInt(bool needprint)
-{
-	//while (Serial.available())
-	//	Serial.read();
-
-	int incomingByte;
-	int integerValue = 0;
-	bool negsign = false;
-	while (true)
-	{
-		incomingByte = Serial.read();
-		if (incomingByte == '\n' || incomingByte == '\r' || incomingByte == 10 || incomingByte == 13 || incomingByte == 32)
-			break;
-		if (incomingByte == -1)
-			continue;
-		if (incomingByte == '-')
-		{
-			negsign = true;
-			continue;
-		}
-		integerValue *= 10;
-		integerValue = ((incomingByte - 48) + integerValue);
-	}
-
-	if (negsign) integerValue = -integerValue;
-
-	if (needprint) Serial.println(integerValue);
-
-	return integerValue;
-}
-
-void RoboticArmClass::servoAngTestByControl()
-{
-	while (true)
-	{
-		Serial.print("\nServo no (0~5): ");
-		int servoNo = serialReadInt(true);
-
-		if (servoNo == 72)		//'x' exit
-		{
-			Serial.println("Bye!!");
-			break;
-		}
-		else if (servoNo >= 0 && servoNo < 6)
-		{
-			Serial.print("Relative Ang: ");
-			int ang = baseDegree[servoNo] + serialReadInt(true);
-			if (ang >= 0 && ang <= 180)
-			{
-				Serial.print(String("==> Servo [ ") + servoNo + " ] move [ " + ang + " ]\n");
-				servoAR[servoNo].write(ang);
-				J[servoNo] = ang;
-			}
-			else
-			{
-				Serial.println(String("Value excessed : ") + ang);
-			}
-		}
-	}
-
-}
-
-void RoboticArmClass::readServoAng(float * Ang)
-{
-	for (size_t i = 0; i < 6; i++)
-	{
-		Ang[i] = servoAR[i].read();
-	}
-}
-
-///////////////////////////////////////////
-
 /*----------------------Angle & Path Calculations----------------------------*/
 void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Deg, bool setError)
 {
@@ -179,7 +47,7 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Deg, 
 	float rz = zp - arm[1] - arm[4] * sin(arm4ToXYang + tiltAngle);
 	float r = sqrt(pow(rx, 2) + pow(rz, 2)); // r is the line between the point J2-J4.
 	/*check if r <= all arm*/
-	//if (r < (arm[2] + arm[3])) r = 262;
+
 	// Ang[2]
 	Ang[2] = M_PI_2 - (acos((pow(r, 2) + pow(arm[2], 2) - pow(arm[3], 2)) / (2 * arm[2] * r))) - atan(rz / rx);
 	// J[2] = pi/2 - ( The angle between r and arm[2] ) - ( The angle between r and XY plane )
@@ -211,30 +79,8 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Deg, 
 	Ang[2] = -Ang[2];
 	Ang[3] = Ang[3];
 
-
-	if (isAngExcess(Ang, setError))
-	{
-#ifdef ErrorOut
-		Serial.print("Cal Ang excessed, ");
-		printOut(xp, "xp", ", ");
-		printOut(yp, "yp", ", ");
-		printOut(zp, "zp");
-		printOut(Ang, 6, "Cal Ang: ");
-#endif // ErrorOut
-
-#ifdef	ErrorHandle
-		if (setError)
-			ArmErrorHandle();
-#endif // ErrorHandle
-	}
-
 	memcpy(Deg, Ang, 5 * sizeof(float));
 
-}
-
-// Still in process
-void RoboticArmClass::getArmPosition(float * Ang, float * XYZ)
-{
 }
 
 bool RoboticArmClass::isAngExcess(float * Ang, bool setError)
@@ -359,18 +205,10 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 			J[i] += sign[i] * angSpeed;
 
 			// Error checking
-#ifdef	ErrorHandle
 			if ((baseDegree[i] + J[i]) > 180 || (baseDegree[i] + J[i]) < 0)
 			{
 				this->ERRcode = 1;
-#ifdef ErrorOut
-				Serial.print("Ang excessed in GoDir, ");
-				printOut(Ang, 6, "Ang: ");
-#endif // ErrorOut
-				J[i] -= sign[i] * angSpeed;
-				ArmErrorHandle();
 			}
-#endif // ErrorHandle
 
 		}
 
@@ -441,7 +279,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Start GrabPen!!");
 #endif // DEBUG
-	//int initxyz[3] = { this->x,this->y,this->z };
 	int liftPenHeight = 75;
 	float offsetY = 3;
 	float offsetX = 13;
@@ -512,7 +349,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 		delay(500);
 		armGoLine(this->x, this->y - 70, this->z, step);
 	}
-	//digitalWrite(OPTIC_ENABLE_Y_PIN, LOW);
 
 #ifdef DEBUG
 	//Serial.println("Y finished!!");
@@ -587,28 +423,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 				armGoLine((this->x + offsetX), this->y, this->z, step / 2);
 			break;
 		}
-
-
-		/*
-		bool hasDetected = false;
-		offsetX = 5;
-		if (!notDetected)
-		{
-#ifdef DEBUG
-			Serial.println("interruptX");
-#endif // DEBUG
-			
-			hasDetected = true;
-		}
-		else if (hasDetected && notDetected)
-		{
-#ifdef DEBUG
-			Serial.println("Over Pen");
-#endif // DEBUG
-			armGoLine((this->x + offsetX), this->y, this->z, step / 2);
-			break;
-		}
-		*/
 		
 	}
 
@@ -630,7 +444,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	showXYZ("Grabbed, go back!!\n");
 #endif // DEBUG	
 	
-	//armGoLine(initxyz[0], initxyz[1], initxyz[2], step);
 	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angspeed);
 
 	return 1;	// In case of slides or controller needs the return value.
@@ -643,10 +456,7 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Start DropPen!!");
 #endif // DEBUG
-	//int initxyz[3] = { this->x, this->y, this->z };
-	/*armGoLine((x + 50), y, z, step);
-	armGoLine(x, y, canZ, step);
-	armGoLine(canX, y, z, step);*/
+
 	armGoDirect(canX, canY, canZ, angSpeed);
 
 #ifdef DEBUG
@@ -667,20 +477,6 @@ void RoboticArmClass::showJ(const char * title)
 {
 	printOut(J, SIZEOF_ARRAY(J), title);
 }
-
-//void RoboticArmClass::showAbJ(const char * title)
-//{
-//	if (title)
-//	{
-//		Serial.print(String(title) + ": ");
-//	}
-//	Serial.print(String(AR[i], DegPrecision) + split + " ");
-//	float Ang[6];
-//	for (size_t i = 0; i < 6; i++)
-//		Ang[i] = J[i] + baseDegree[i];
-//
-//	printOut(Ang, SIZEOF_ARRAY(Ang), title);
-//}
 
 void RoboticArmClass::showXYZ(const char * title, bool XYZdisp)
 {

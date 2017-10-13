@@ -10,10 +10,10 @@
 #endif
 
 // Enable debugging
-#define DEBUG
-#define ErrorOut
+//#define DEBUG
+//#define ErrorOut
 //#define ErrorHandle
-#define TEST
+//#define TEST
 
 
 
@@ -64,34 +64,13 @@ class RoboticArmClass
 {
 public:
 	/*--------------------------Initializations----------------------------------*/
-	//RoboticArmClass();
 	void initServo();
 	int initPosit(float ix = 300, float iy = 0, float iz = 300, float angSpeed = ANGULARSPEED);
-	
-	int ArmErrorHandle();
-	///// Debugging ///////////////////////////
-	void setJ(float * Ang);
-	void servoInit();
-	void servoDoJ();
-
-	void waitkey();
-	int serialReadInt(bool needprint = false);	// Read in an int or -int.
-	void servoAngTestByControl();				// Directly type in angle to control servo.
-	void readServoAng(float * Ang);
-	///////////////////////////////////////////
 
 	/*----------------------Angle & Path Calculations----------------------------*/
 	void getArmAngleDeg(float xp, float yp, float zp, float * Deg, bool setError = false);
 
-	void getArmPosition(float * Ang, float * XYZ);
-
 	bool isAngExcess(float * Ang, bool setError = false);
-	
-
-	//void adjPosition();				// Adjust position x, y, z value from Servos' angle J.
-	//bool isAngleFailed();				// Check if Servos' angle hit the limitations.
-
-	//void Jzero();
 
 	/*-------------------------------Actions--------------------------------------*/
 	void servoAct(bool ERRcheck = false);													// Servos' signal output.
@@ -116,26 +95,17 @@ public:
 	
 	
 	/**----------------------Writing-----------------------------**/
-	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
-
 	/*----------------------------Print and Show----------------------------------*/
 	void showJ(const char * title = NULL);
-	//void showAbJ(const char * title = NULL);
 	void showXYZ(const char * title = NULL, bool XYZdisp = false);
 	void printOut(float * AR, size_t ARsize, const char * Hstring = NULL, const char * split = ",");	//Print out array.
 	void printOut(float n, const char * Hstring = NULL, const char * endString = "\n");					//Print out variable.
-
-	//float * getJ();
-	//float * getXYZ();
-	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
-
 
 private:
 	float initXYZ[3];
 	float baseDegree[6] = { 98, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
 	float x = 0, y = 0, z = 0;							// Position coordinate.
 	float J[6] = { -88, -5, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
-	//float J[6] = { 0, 0, 90, 0, 40, 0 };
 	float tiltAngle = 0;			// alpha			// The angle of inclination of the plane which the Claw parallels to.
 	Servo servoAR[6];
 
