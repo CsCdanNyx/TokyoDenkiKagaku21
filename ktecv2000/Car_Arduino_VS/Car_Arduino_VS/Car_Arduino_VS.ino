@@ -90,65 +90,147 @@ void setup()
 	// ------ serial set ------
 	Serial.begin(9600);
 	Serial.flush();
-
-	//printf_serial("Start!\n");
 }
 
-char task_1_target;
-int task_2_pos;
 // start
-void task_0();
+void task_0_start();
 // detect target
-void task_1();
+void task_1_detect();
 // knock-down
-void task_2();
-void keyes_ir();
+void task_2_recong();
+// grab pen
+void task_3_grab();
+// drop pen
+void task_4_drop();
 
-void is_stop();
-
-void loop1()
+// --- test code ---
+void test_1()
 {
 	while (Serial.read() == -1);
-	car.wheel->move(WHEEL_MOVE_GO);
-	
-	//car.wheel->left(1);
-	//while(1) car.wheel->read_sensor();
-	printf_serial("over\n");
-	delay(200);
-}
-
-void loop5()
-{
+	printf_serial("MOVE VERTICAL\n");
 	Serial.flush();
+	car.slider->setDir(SLIDER_DIR_V);
+	car.slider->move(SLIDER_MOVE_T, 1);
+	delay(1000);
+	car.slider->move(SLIDER_MOVE_T, -1);
 
 	while (Serial.read() == -1);
-	car.wheel->move(WHEEL_MOVE_GO);
+	printf_serial("MOVE HORIZONTAL\n");
 
-	Car::clearCheckPoint();
-	task_0();
-	Car::clearCheckPoint();
-	task_1();
-	Car::clearCheckPoint();
-	task_2();
-	Car::clearCheckPoint();
-	while (1);
+	Serial.flush();
+	car.slider->setDir(SLIDER_DIR_H);
+	car.slider->move(SLIDER_MOVE_T, 1);
+	delay(1000);
+	car.slider->move(SLIDER_MOVE_T, -1);
+}
+void test_3_adjust_slider()
+{
+	pinMode(20, INPUT);
+	char buf[6];
+	while (Serial.available() <= 0);
+	Serial.readBytes(buf, 5);
+	delay(200);
+	Serial.flush();
+	if (buf[0] == 'V')
+	{
+		printf_serial("V ");
+		car.slider->setDir(SLIDER_DIR_V);
+	}
+	else if (buf[0] == 'H')
+	{
+		printf_serial("H ");
+		car.slider->setDir(SLIDER_DIR_H);
+	}
 
+	buf[5] = 0;
+	uint8_t pwm = atoi(buf+2);
+	printf_serial("%d ", pwm);
+	if (buf[1] == '+')
+	{
+		printf_serial("+ \n");
+		car.slider->move(SLIDER_MOVE_TEST, 1);
+	}
+	else if (buf[1] == '-')
+	{
+		printf_serial("- \n");
+		car.slider->move(SLIDER_MOVE_TEST, -1, pwm);
+	}
+	Serial.flush();
+	delay(300);
+}
+void test_4_read_sensor()
+{
+	while(1)
+		car.wheel->read_sensor();
+}
+void test_5_line_follow_and_check_point()
+{
+	car.wheel->setCheckNum(1);
+	car.wheel->move1();
 }
 
+// go, leave ch, stop
+// go a little
+// back, leave, touch
 void loop()
 {
 	while (Serial.read() == -1);
-	Serial.flush();
-	Car::clearCheckPoint();
-	task_0();
-	Car::clearCheckPoint();
-	task_3();
+	test_5_line_follow_and_check_point();
+	while (1);
+	//car.slider->setDir(SLIDER_DIR_V);
+	//Serial.flush();
+	//delay(100);
+	//car.slider->move(SLIDER_DIR_V, 1);
+	//while (1) car.wheel->read_sensor();
+	//while (1)
+	//{
+	//	car.wheel->forward(255);
+	//	isCheckPoint(pinSet);
+	//}
+
+	
+	int check_num;
+	{
+		char buf[2];
+		while (Serial.available() <= 0);
+		Serial.readBytes(buf, 2);
+		Serial.flush();
+		check_num = atoi(buf);
+	}
+	
+	car.wheel->setCheckNum(check_num);
+
+	// ... adjust task execution by check_num
+	switch (check_num)
+	{
+	case Car::CHECK_POINT_0_START:
+	case Car::CHECK_POINT_1_PICTURE:
+	case Car::CHECK_POINT_5_KEEP:
+	case Car::CHECK_POINT_6_lCURVE:
+	case Car::CHECK_POINT_7_rCURVE:
+	case Car::CHECK_POINT_8_rCURVE:
+	case Car::CHECK_POINT_12_rSPIN:
+	case Car::CHECK_POINT_14_wPICTURE:
+	case Car::CHECK_POINT_15_WRITE:
+		task_0_start();
+	case Car::CHECK_POINT_2_KEEP:
+	case Car::CHECK_POINT_3_dPICTURE:
+	case Car::CHECK_POINT_4_KNOCK:
+		task_1_detect();
+		task_2_recong();
+	case Car::CHECK_POINT_13_PICK:
+		task_3_grab();
+		break;
+	case Car::CHECK_POINT_16_DROP:
+		task_4_drop();
+	}
+
 	while (1);
 
 }
 
 // start
-void task_0()
+void task_0_start()
 {
 
 #ifdef __WHEEL__
@@ -158,36 +240,35 @@ void task_0()
 	//car.wheel->halt();
 	/// serial communication [board -> computer]
 	/// form computer task started
-	Serial.println("Button is pressed, start moving");
-	car.wheel->move(WHEEL_MOVE_GO);
+	Serial.println("@ Start : button is pressed.");
+	car.wheel->move1();
 #endif // __WHEEL
-
+	task_1_detect();
 }
-// detect target
-void task_1()
+/// detect target
+void task_1_detect()
 {	
 #ifdef __WHEEL__
-	Serial.println("reaching Sign-stand check point");
+	Serial.println("@ OK Wheel, had reached detect sign-stand check point");
 
 	Serial.flush();
 	delay(300);
-	while (Serial.read() != -1);
 	while (Serial.read() == -1);
 	Serial.flush();
 	delay(300);
-	car.wheel->move(WHEEL_MOVE_GO);
+	car.wheel->move1();
 
 #endif // __WHEEL__
-
+	task_2_recong();
 }
-// knock-down
-void task_2()
+/// knock-down
+void task_2_recong()
 {
 
 #ifdef __WHEEL__
 
 	//car.wheel->forward(255);
-	Serial.println("Reaching knock-down check point");
+	Serial.println("@ OK Wheel, had reached knock-down check point");
 #endif
 	/// serial communication [computer -> board]
 	/// send data(distance) back to board
@@ -196,13 +277,12 @@ void task_2()
 	int pos;
 	while ((pos = Serial.read()) == -1);
 	/// decode data
-	Serial.println(pos, DEC);//////
 	int pos_x = pos % 3, pos_y = pos / 3;
-	//printf_serial("%d %d\n", d_x, d_y);/////////
 	/// move 
 
 #ifdef __SLIDER__
-	delay(5000);
+	delay(5000);		// wait for wheel moving to specific position
+
 	car.slider->setDir(SLIDER_DIR_V);
 	car.slider->move(SLIDER_MOVE_T, car.slider->t_v_up * pos_y);
 	delay(1000);
@@ -212,12 +292,14 @@ void task_2()
 	car.slider->setDir(SLIDER_DIR_H);
 	car.slider->move(SLIDER_MOVE_T, -car.slider->t_h_pushOrPull);
 
+	Serial.println("@ OK Slider, had successfully knock down sign-stand");
+
 #endif // __SLIDER__
 
 #ifdef __WHEEL
 	if (pos_x == 0)
 	{
-		car.wheel->move(WHEEL_MOVE_GO, 1);
+		car.wheel->move1();
 	}
 	else if (pos_x == 1)
 	{
@@ -229,17 +311,23 @@ void task_2()
 	}
 	else if (pos_x == 2)
 	{
-		car.wheel->move(WHEEL_MOVE_BACK, 1);
+		car.wheel->move1();
 	}
+	
+	Serial.flush();
+	delay(300);
+	while (Serial.read() == -1);
+	car.wheel->move1();
+
 #endif // __WHEEL
 
-
+	task_3_grab();
 }
-
-void task_3()
+/// pick pen
+void task_3_grab()
 {
 #ifdef __WHEEL__
-	Serial.println("Enter pick-pen check point");
+	Serial.println("@ OK Wheel, had reached pick-pen check point");
 #endif
 #ifdef __SLIDER__
 	Serial.flush();
@@ -271,90 +359,56 @@ void task_3()
 	
 	delay(2000);
 	car.slider->move(SLIDER_MOVE_T, -(car.slider->t_h_pickPen));
-	Serial.print("GrabPen Finished.");
-	
-	//while (Serial.read() == -1);
-	//Arm.DropPen(400, 50, 250);
-	//Serial.print("DropPen Finished.");
-#endif // __SLIDER__
-}
+	Serial.println("@ OK Arm, had successfully grab pen.");
 
-void task_4()  // pick / drop pen
+#endif // __SLIDER__
+
+#ifdef __WHEEL__
+	Serial.flush();
+	delay(300);
+	while (Serial.read() == -1);
+	car.wheel->move1();
+#endif // __WHEEL__
+	task_4_drop();
+}
+/// drop pen
+void task_4_drop() 
 {
 #ifdef __WHEEL__
-	Serial.println("Enter drop-pen check point");
+	delay(500);
 	car.wheel->spin('R');
 	delay(1200);
-	car.wheel->halt();
+	car.wheel->brake();
+	Serial.println("@ OK Wheel, had reached drop pen check point");
 
 #endif
 
 #ifdef __SLIDER__
-	Serial.flush();
-	delay(300);
 	char cmd;
-	while ( (cmd = Serial.read()) == -1);
+	while ((cmd = Serial.read()) == -1);
 	if (cmd == 'S')
 	{
-		Serial.println("Pulling up slider to drop pen\n");
-
 		delay(2000);
 		car.slider->setDir(SLIDER_DIR_V);
 		car.slider->move(SLIDER_MOVE_T, car.slider->t_v_dropPen);
-		return;
+		delay(2000);
+		car.slider->setDir(SLIDER_DIR_H);
+		car.slider->move(SLIDER_MOVE_T, 0.5);
+		Serial.println("@ OK Slider, push slider to drop pen position\n");
+
+		delay(4000);
+		car.slider->setDir(SLIDER_DIR_H);
+		car.slider->move(SLIDER_MOVE_T, -0.5);
 	}
-	Serial.flush();
-	delay(300);
-
-	while (Serial.read() == -1);
-	Arm.initPosit(300, 0, 300);
-	Serial.print("Init Complete.");
-
-	while (Serial.read() == -1);
-	Arm.GrabPen(430, 0, 110);
-	Serial.print("GrabPen Finished.");
-
-	while (Serial.read() == -1);
-	Arm.DropPen(400, 50, 250);
-	Serial.print("DropPen Finished.");
-#endif // __SLIDER__
-
-
-	while (1);
-}
-
-void keyes_ir()
-{
-	int enablePin = 4;
-	pinMode(enablePin, OUTPUT);
-	int outputPin = 3;
-	pinMode(outputPin, INPUT);
-	bool objectDetect = false;
-	while (1)
+	else
 	{
-		digitalWrite(enablePin, HIGH);     // Enable the internal 38kHz signal.
-		delayMicroseconds(210);                   // Wait 210?s (8 pulses of 38kHz).
-		if (digitalRead(outputPin))        // If detector Output is HIGH,
-		{
-			objectDetect = false;           // then no object was detected;
-		}
-		else                                // but if the Output is LOW,
-		{
-			delayMicroseconds(395);               // wait for another 15 pulses.
-			if (digitalRead(outputPin))    // If the Output is now HIGH,
-			{                               // then first Read was noise
-				objectDetect = false;       // and no object was detected;
-			}
-			else                            // but if the Output is still LOW,
-			{
-				objectDetect = true;        // then an object was truly detected.
-			}
-		}
-		digitalWrite(enablePin, LOW);      // Disable the internal 38kHz signal.
+		Serial.flush();
+		delay(300);
 	}
-}
 
-void is_stop()
-{
-	car.slider->stop = true;
+	while (Serial.read() == -1);
+
+	Arm.DropPen(400, 50, 250);
+	
+#endif // __SLIDER__
 }

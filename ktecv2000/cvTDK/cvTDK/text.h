@@ -30,9 +30,11 @@ protected:
 
 	//Target target;
 private:
-	char _target = '4';
+	char _target = 0;
 	int _camera = 0;
 	Object _object;
+
+	int vedio_subs, block_size;
 };
 
 class Task1 : public Task
@@ -50,3 +52,5 @@ int text_train();
 
 int track_obj();
 
+extern int maxValue, blockSize, C;
+void on_change(int, void*);

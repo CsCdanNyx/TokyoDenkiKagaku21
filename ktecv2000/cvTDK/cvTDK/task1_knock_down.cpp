@@ -31,14 +31,13 @@ void Task1::execute()
 	}
 	else
 	{
-		std::cout << "-------------------\n";
 		while(!getTarget())
 			text_recong(pic);
-		std::cout << "-------------------\n";
 		return;
 	}
 	
 	/// calculate moving distance
+	/*
 	Object object = getObject();
 
 	float prop_x = digit_2_w / float(object.bound.width);
@@ -73,5 +72,5 @@ void Task1::execute()
 	std::cout << "Serial write success!\n";
 
 	Sleep(500);
-	
+	*/	
 }

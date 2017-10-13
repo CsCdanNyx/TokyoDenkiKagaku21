@@ -56,6 +56,7 @@ int text_train() {
 		std::cout << "[" << times++ << "]\n";
 		int press = cv::waitKey(0);
 		std::cout << press << "\n";
+
 		if (press == 32)
 		{
 			Sleep(100);
@@ -90,8 +91,8 @@ int text_train() {
 			255,                                    // make pixels that pass the threshold full white
 			cv::ADAPTIVE_THRESH_GAUSSIAN_C,         // use gaussian rather than mean, seems to give better results
 			cv::THRESH_BINARY_INV,                  // invert so foreground will be white, background will be black
-			75,                                     // size of a pixel neighborhood used to calculate threshold value
-			30);                                     // constant subtracted from the mean or weighted mean
+			35,                                     // size of a pixel neighborhood used to calculate threshold value
+			25);                                     // constant subtracted from the mean or weighted mean
 
 		//cv::namedWindow("imgThresh", cv::WINDOW_NORMAL);
 		cv::imshow("imgThresh", imgThresh);         // show threshold image for reference
@@ -145,6 +146,9 @@ int text_train() {
 					cv::Mat matImageFlattenedFloat = matImageFloat.reshape(1, 1);       // flatten
 
 					matTrainingImagesAsFlattenedFloats.push_back(matImageFlattenedFloat);       // add to Mat as though it was a vector, this is necessary due to the
+					
+					static int times = 0;
+					std::cout << " >> " << ++times << "\n";
 																								// data types that KNearest.train accepts
 				}   // end if
 			}   // end if

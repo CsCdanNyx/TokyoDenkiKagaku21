@@ -12,7 +12,7 @@
 
 
 //-------------------------------
-#define __COLOR_SENSOR__
+//#define __COLOR_SENSOR__
 #define __WHEEL__
 //#define __SLIDER__
 //-------------------------------
@@ -45,53 +45,80 @@ class Car
 public:
 	Car(PinSet pin);
 	void halt() const;
-	static bool isOnCheckPoint();
-	static void clearCheckPoint();
-	static void setCheckPoint();
+	void setCheckNum(uint8_t);
 
-	volatile bool stop = false;
+	enum {
+		CHECK_POINT_0_START,
+		CHECK_POINT_1_PICTURE,
+		CHECK_POINT_2_KEEP,
+		CHECK_POINT_3_dPICTURE,
+		CHECK_POINT_4_KNOCK,
+		CHECK_POINT_5_KEEP,
+		CHECK_POINT_6_lCURVE,
+		CHECK_POINT_7_rCURVE,
+		CHECK_POINT_8_rCURVE,
+		CHECK_POINT_9_BREAK,
+		CHECK_POINT_10_BREAK,
+		CHECK_POINT_11_BREAK,
+		CHECK_POINT_12_rSPIN,
+		CHECK_POINT_13_PICK,
+		CHECK_POINT_14_wPICTURE,
+		CHECK_POINT_15_WRITE,
+		CHECK_POINT_16_DROP,
+	};
+
 protected:
 	//virtual void move(int d) = 0;
 
 	const PinSet pin;
 	const int MAX_PWM = 255, MIN_PWM = 0;
-	uint8_t last_dir;
 	
+	uint8_t check_num = 13 - 1;
+	uint8_t move_mode;
 private:
 	static volatile bool _onCheckPoint;
 };
+
+#define MOVE_MODE_BIG_TURN			0
+#define MOVE_MODE_SMALL_TURN		1
+#define MOVE_MODE_GENERAL			2
 
 class Wheel : public Car
 {
 
 public:
 	Wheel(PinSet pin);
-	void move(int mode, int d = 1);
-	void spin(int dir) const;
-	void forward(int) ;
-	void backward(int) ;
-	void read_sensor();
-
+	void move1();
+	void brake(unsigned long msec = 30);
+	void spin(int dir, uint8_t pwm = 255);
+	inline void read_sensor();
 
 private:
-	//void read_sensor();
-	//void forward(int) const;
-	//void backward(int) const;
-	void left(int) ;
-	void right(int) ;
-	
-	volatile uint8_t sensors[10];
-	
-	bool dir = false;
 
-	const uint8_t sensors_num[6] = { 33,31,30,32,34,36 };	// PIN 7 BREAK !
-	const uint8_t max_sen = 6;
+	void left() ;
+	void right() ;
+	void forward(uint8_t pwm = 0);
+	void backward(uint8_t pwm = 255);
+
+	bool inCheckPoint();
+	bool touch_check_point();
+
+	void setTurnMode(uint8_t);
+
+	//volatile uint8_t sensors[10];
+	volatile uint8_t l, r, ch;	 /// numbers in no-line are
+
+	enum 
+	{
+		FORWARD, BACKWARD, LEFT, RIGHT, LSPIN, RSPIN
+	} dir;
+
+	//const uint8_t sensors_num[6] = { 33,31,30,32,34,36 };	// PIN 7 BREAK !
+	const uint8_t MAX_SEN = 4;
 	// ----------------
 
-	const uint8_t PITCH = 5;
-	const uint8_t TEETH = 60;
-
-	const float turn_l_half = 0;
+	//const uint8_t PITCH = 5;
+	//const uint8_t TEETH = 60;
 
 };
 
@@ -100,21 +127,21 @@ private:
 
 #define SLIDER_MOVE_T 0
 #define SLIDER_MOVE_D 1
-
+#define SLIDER_MOVE_TEST 2
 class Slider : public Car
 {
 public:
 	Slider(PinSet pin);
-	void move(uint8_t mode, float dt);
+	void move(uint8_t mode, float dt, uint8_t pwm = 255);
 	void setDir(uint8_t dir);	// dir = 'V' (Vertical) or 'H' (Horizontal)
 	uint8_t getDir() const;
 
 	const float t_h_pushOrPull = 4.6;
 	const float t_v_up = 7.3, t_v_down = 6.8;			// cm/s 
 
-	const float t_v_pickPen = 8.88;
-	const float t_h_pickPen = 2.5;
-	const float t_v_dropPen = 15.05;
+	const float t_v_pickPen = 6.17;
+	const float t_h_pickPen = 2.1;
+	const float t_v_dropPen = 14;
 private:
 	void forward(uint8_t pwm) const;
 	void backward(uint8_t pwm) const;
@@ -130,8 +157,6 @@ private:
 	// [Task] knock down sign-stand 
 
 };
-
-bool isCheckPoint(PinSet pin);
 
 #endif
 

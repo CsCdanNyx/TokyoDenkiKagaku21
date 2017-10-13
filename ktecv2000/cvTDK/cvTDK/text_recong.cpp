@@ -7,7 +7,7 @@
 #include "text.h"
 // global ///////////////////////////////////////////////////////////////////////////////
 
-const int MIN_CONTOUR_AREA = 500;
+const int MIN_CONTOUR_AREA = 400;
 const int MAX_CONTOUR_AREA = 10000;
 const int RESIZED_IMAGE_WIDTH = 20;
 const int RESIZED_IMAGE_HEIGHT = 30;
@@ -25,7 +25,7 @@ public:
 	bool checkIfContourIsValid() {                            
 		ratio = (float)std::max(boundingRect.width,boundingRect.height) / (float)std::min(boundingRect.width, boundingRect.height);
 		
-		if (fltArea < MIN_CONTOUR_AREA || ratio > 3.0)
+		if (fltArea < MIN_CONTOUR_AREA || ratio > 2.0)
 		{
 			return false;          
 		}
@@ -42,16 +42,32 @@ public:
 
 };
 
-
+bool sortPointX(const cv::Rect& a, const cv::Rect& b) {      // this function allows us to sort
+	return(a.x < b.x);                                                   // the contours from left to right
+}
+bool sortPointY(const cv::Rect& a, const cv::Rect& b) {      // this function allows us to sort
+	return(abs(a.y) < abs(b.y));                                                   // the contours from left to right
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 Task::Task(int camera)
 {
 	setCamera(camera);
 }
+
+
+//int maxValue = 255, blockSize = 35, C = 23;
+void on_change(int, void*)
+{
+
+}
+
+int maxValue = 255, blockSize = 21, C = 12;
 int Task::text_recong(cv::Mat src) {
+/// file processing
 	std::vector<ContourWithData> allContoursWithData;           // declare empty vectors,
 	std::vector<ContourWithData> validContoursWithData;         // we will fill these shortly
 
+	std::vector<cv::Rect> numbers;
 																// read in training classifications ///////////////////////////////////////////////////
 
 	cv::Mat matClassificationInts;      // we will read the classification numbers into this variable as though it is a vector
@@ -85,7 +101,8 @@ int Task::text_recong(cv::Mat src) {
 	cv::Ptr<cv::ml::KNearest>  kNearest(cv::ml::KNearest::create());            // instantiate the KNN object
 
 																				// finally we get to the call to train, note that both parameters have to be of type Mat (a single Mat)
-																				// even though in reality they are multiple images / numbers
+																				// even though in reality they are multiple images / 
+
 	kNearest->train(matTrainingImagesAsFlattenedFloats, cv::ml::ROW_SAMPLE, matClassificationInts);
 
 	// test ///////////////////////////////////////////////////////////////////////////////
@@ -99,14 +116,16 @@ int Task::text_recong(cv::Mat src) {
 	//cv::Mat pic = cv::imread(TRAIN_XML_PATH + "train_22.jpg");            // read in the test numbers image
 	
 	if (pic.empty()) {                                // if unable to open image
+		std::cout << "Source error!\n";
 		return(-1);                                                  // and exit program
 	}
 
 	cv::Mat matGrayscale;           //
 	cv::Mat matBlurred;             // declare more image variables
 	cv::Mat matThresh;              //
+	cv::Mat matThreshShelfEdge;              //
 	cv::Mat matThreshCopy;          //
-
+/// image pre-processing
 	cv::cvtColor(pic, matGrayscale, CV_BGR2GRAY);         // convert to grayscale
 
 	cv::Mat out;
@@ -122,15 +141,19 @@ int Task::text_recong(cv::Mat src) {
 	//cv::namedWindow("Blur: ", CV_WINDOW_NORMAL);
 	//cv::imshow("Blur: ", matBlurred);
 
+
+	std::vector<std::vector<cv::Point> > ptContours;        // declare a vector for the contours
+	std::vector<cv::Vec4i> v4iHierarchy;                    // declare a vector for the hierarchy (we won't use this in this program but this may be helpful for reference)
+
 								   // filter image from grayscale to black and white
 	cv::adaptiveThreshold(matBlurred,                           // input image
 		matThresh,                            // output image
-		255,                                  // make pixels that pass the threshold full white
+		maxValue,                                  // make pixels that pass the threshold full white
 		cv::ADAPTIVE_THRESH_GAUSSIAN_C,       // use gaussian rather than mean, seems to give better results
 		cv::THRESH_BINARY_INV,                // invert so foreground will be white, background will be black
-		83,                                   // size of a pixel neighborhood used to calculate threshold value
-		53);                                   // constant subtracted from the mean or weighted mean
-
+		(blockSize/2)*2+1,                                   // size of a pixel neighborhood used to calculate threshold value
+		C);                                   // constant subtracted from the mean or weighted mean
+	// 83,53
 
 	// 8 -> 6
 	// 
@@ -138,10 +161,8 @@ int Task::text_recong(cv::Mat src) {
 	cv::resize(matThresh, out, cv::Size(800, 800));
 	cv::imshow("Threshold: ", out);
 
+/// find contours 
 	matThreshCopy = matThresh.clone();              // make a copy of the thresh image, this in necessary b/c findContours modifies the image
-
-	std::vector<std::vector<cv::Point> > ptContours;        // declare a vector for the contours
-	std::vector<cv::Vec4i> v4iHierarchy;                    // declare a vector for the hierarchy (we won't use this in this program but this may be helpful for reference)
 
 	cv::findContours(matThreshCopy,             // input image, make sure to use a copy since the function will modify this image in the course of finding contours
 		ptContours,                             // output contours
@@ -172,10 +193,11 @@ int Task::text_recong(cv::Mat src) {
 	int candidate[2] = { 0, -1 };		// char , position
 	float candidate_accuracy = 0;		
 
+/// contours filter
 	for (int i = 0; i < validContoursWithData.size(); i++) {            // for each contour
 		std::cout << "[points] " << validContoursWithData[i].ptContour.size() << "\n";
 		std::cout << "[ratio] " << validContoursWithData[i].ratio << "\n";
-		
+		std::cout << "[Size] " << validContoursWithData[i].fltArea << "\n";
 		/// draw a green rect around the current char
 		
 		cv::rectangle(pic,                            // draw rectangle on original image
@@ -195,7 +217,10 @@ int Task::text_recong(cv::Mat src) {
 
 		cv::Mat matCurrentChar(0, 0, CV_32F);
 		cv::Mat neighbor_res(0, 0, CV_32F);
-		int k = 32;
+
+
+		int k = 30;
+		
 		//float res = kNearest->findNearest(matROIFlattenedFloat, 1, matCurrentChar);     // finally we can call find_nearest !!!
 		
 		float fltCurrentChar = kNearest->findNearest(matROIFlattenedFloat, k, matCurrentChar, neighbor_res, cv::noArray());
@@ -214,10 +239,10 @@ int Task::text_recong(cv::Mat src) {
 		cv::namedWindow("Detect", CV_WINDOW_NORMAL);
 		cv::resize(pic, out, cv::Size(600, 600));
 		cv::imshow("Detect", out);
-		cv::waitKey(0);
+		//cv::waitKey(0);
 		strFinalString = strFinalString + char(int(fltCurrentChar));        // append current char to full string
 		
-		if ( (!target || target == char(int(fltCurrentChar))) && accuracy >= 7)
+		if ( (!target || target == char(int(fltCurrentChar))) && accuracy >= 6)
 		{
 
 			if (candidate_accuracy < accuracy)
@@ -231,6 +256,13 @@ int Task::text_recong(cv::Mat src) {
 				2);                                           // thickness
 		}
 
+		// a valid digit
+		
+		if (target && accuracy >= 7)
+		{
+			std::cout << "coord = " << validContoursWithData[i].boundingRect.x << "," << validContoursWithData[i].boundingRect.y << "\n";
+			numbers.push_back(validContoursWithData[i].boundingRect);
+		}
 	}
 	if (!target)
 	{
@@ -247,6 +279,8 @@ int Task::text_recong(cv::Mat src) {
 	}
 	else
 	{
+		// sort digits to find location
+
 		Object object;
 		int index = candidate[1];
 		if (index == -1)
@@ -256,12 +290,27 @@ int Task::text_recong(cv::Mat src) {
 		}
 		object.center = cv::Point(validContoursWithData[index].boundingRect.x + validContoursWithData[index].boundingRect.width / 2,
 			validContoursWithData[index].boundingRect.y + validContoursWithData[index].boundingRect.height / 2);
+		std::cout << "Target center at -> " << object.center.x << "," << object.center.y << "\n";
 		object.bound = validContoursWithData[index].boundingRect;
 		setObject(object);
 
-		int src_x_unit = src.cols / 3, src_y_unit = src.rows / 3;
-		object.pos = abs(object.center.x) / src_x_unit + abs(object.center.y) / src_y_unit * 3;
+		const int shelf_num = 3;
+
+		std::sort(numbers.begin(), numbers.end(), sortPointX);
+		int shelf_x_unit = (abs(numbers[numbers.size() - 1].x - numbers[0].x)) / (shelf_num - 1);
+		std::sort(numbers.begin(), numbers.end(), sortPointY);
+		int shelf_y_unit = (abs(numbers[numbers.size() - 1].y - numbers[0].y)) / (shelf_num - 1);
+
+		int shelf_x_base = abs(numbers[0].x);
+		int shelf_y_base = abs(numbers[0].y);
+
+		std::cout << "@Shelf : unit = " << shelf_x_unit << "," << shelf_y_unit << "\n";
+		std::cout << "@Shelf : the most-left-up point = " << shelf_x_base << "," << shelf_y_base << "\n";
+
+		object.pos = (abs(object.center.x) - shelf_x_base) / shelf_x_unit + (abs(object.center.y) - shelf_y_base) / shelf_y_unit * shelf_num;
 		std::cout << "found target at position " << object.pos << "\n";
+
+		cv::waitKey(0);
 	}
 	//std::cout << "\n\n" << "numbers read = " << strFinalString << "\n\n";       // show the full string
 
@@ -269,7 +318,7 @@ int Task::text_recong(cv::Mat src) {
 	cv::resize(pic, out, cv::Size(800, 800));
 	cv::imshow("Detect", out);     
 
-	cv::waitKey(0);                                      
+	//cv::waitKey(0);                                      
 	return(0);
 }
 

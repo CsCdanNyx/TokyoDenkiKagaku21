@@ -23,27 +23,23 @@ Car::Car(PinSet pin)
 }
 void Car::halt() const
 {
+	digitalWrite(pin.M1, HIGH);
+	digitalWrite(pin.M2, HIGH);
+
 	analogWrite(pin.MOT_1, MIN_PWM);
 	analogWrite(pin.MOT_2, MIN_PWM);
 }
-void Car::setCheckPoint()
+void Car::setCheckNum(uint8_t ch)
 {
-	static int time = 0;
-	if (time > 3)
-	{
-		_onCheckPoint = true;
-		time = 0;
-	}
+	check_num = ch;
+	if (check_num <= CHECK_POINT_4_KNOCK || check_num >= CHECK_POINT_12_rSPIN)
+		move_mode = MOVE_MODE_GENERAL;
+	else if (check_num == CHECK_POINT_7_rCURVE || check_num == CHECK_POINT_8_rCURVE)
+		move_mode = MOVE_MODE_BIG_TURN;
 	else
-		time++;
-}
-bool Car::isOnCheckPoint() // inline
-{
-	return _onCheckPoint;
-}
-void Car::clearCheckPoint()
-{
-	_onCheckPoint = false;
+		move_mode = MOVE_MODE_SMALL_TURN;
+
+	//check_num++;
 }
 
 #ifdef __WHEEL__
@@ -58,579 +54,483 @@ Wheel::Wheel(PinSet pin) : Car(pin)
 	//pinMode(pin.ON_CHECK, INPUT_PULLUP);
 	//attachInterrupt(digitalPinToInterrupt(pin.ON_CHECK), setCheckPoint, LOW);
 }
-void Wheel::move(int mode, int d = 1)
+bool Wheel::inCheckPoint()
 {
-	/*
-	if (d != DEFAULT_DISTANCE)
+	uint8_t ch;
+	static int stable_check_times = 0;
+	while (stable_check_times < 5 && stable_check_times > -5)
 	{
-		//teeth = _teeth = 0;
+		noInterrupts();
+		uint8_t IN_C = PINC;
+		interrupts();
 
-		attachInterrupt(digitalPinToInterrupt(pin.WHEEL_OI), gear, RISING);
-		//Timer1.initialize(TIME_PERIOD * 1000000);         // initialize timer1, and set a 1/2 second period
-		//Timer1.attachInterrupt(time_tick);  // attaches callback() as a timer overflow interrupt
 
-		if (d > 0)
-			//left(3);
-			forward();
+		ch = (IN_C >> 4) & 1;
+		ch += (IN_C >> 1) & 1;
+
+		//printf_serial("%d\n", (ch == 2)); ////////////////
+		if (ch == 2)
+		{
+			stable_check_times++;
+		}
 		else
 		{
-			//left(3);
-			backward();
-			d = -d;
+			stable_check_times--;
 		}
+		delay(1);
+	}
+	stable_check_times = 0;
 
-		d = TEETH*PITCH * 5 * 2;
-		while (1)
+	if (stable_check_times >= 4 || stable_check_times <= -6)
+		return true;
+	else
+		return false;
+
+
+}
+bool Wheel::touch_check_point()
+{
+	static uint8_t stables = 0;
+
+	if (l + r == MAX_SEN && stables++ >= 5)
+	{
+		check_num++;
+		stables = 0;
+		return true;
+	}
+	return false;
+}
+void Wheel::move1()
+{
+	static uint8_t ll, lr;
+
+	/// leave start check point
+	forward();
+	delay(200);
+
+	
+	while (1)
+	{
+		read_sensor();
+
+		//printf_serial("%d %d\n", l, r);////////////
+		//printf_serial(" => %d\n", ch); ////////////////
+
+		static bool entered_check_point = false;
+		/// enter check point
+		
+		if (entered_check_point)
 		{
+			//printf_serial("Check num %d\n", check_num); ////////////////
 			
-			if (teeth != _teeth)
+			//enter_check_point = false;
+			switch (check_num)
 			{
-				oi[oi_peek]++;
-				oi_peek = !oi_peek;
-				_teeth = teeth;
-			}
-			if (oi[0] > 30 || oi[1] > 30)
-			{
-				printf_serial("%d %d\n", oi[0], oi[1]);
-				oi[0] = oi[1] = 0;
-			}
-			
-			
-			if (teeth*PITCH >= d)
-			{
-				halt();
-				detachInterrupt(digitalPinToInterrupt(pin.WHEEL_OI));
-				//Timer1.detachInterrupt();
+
+			case CHECK_POINT_1_PICTURE:
+				forward();
+				delay(200);
+				brake();
+				entered_check_point = false;
 				return;
+			/// curve to left : turn left until all left-half part is on the line
+			case CHECK_POINT_6_lCURVE:
+				forward();
+				delay(650);
+				left();
+				do
+				{
+					read_sensor();
+				} while (r);
+				entered_check_point = false;
+				//forward(f_speed);
+				break;
+			case CHECK_POINT_7_rCURVE:
+				forward();
+				delay(1000);
+				spin('L', 120);
+
+				do
+				{
+					read_sensor();
+				} while (l + r);
+				entered_check_point = false;
+				brake();
+
+				move_mode = MOVE_MODE_SMALL_TURN;
+				//delay(10);
+				break;
+			/// curve to right : turn right until all right-half part is on the line
+			case CHECK_POINT_8_rCURVE:
+				forward();
+				delay(450);
+				right();
+				do
+				{
+					read_sensor();
+				} while (l);
+				entered_check_point = false;
+				//forward(f_speed);
+				break;
+
+
+			/// keep'er going
+			case CHECK_POINT_5_KEEP:
+				move_mode = MOVE_MODE_SMALL_TURN;
+				break;
+			case CHECK_POINT_3_dPICTURE:
+				forward();
+				delay(200);
+				brake();
+				entered_check_point = false;
+
+				delay(1500);
+
+				forward();
+				delay(100);
+				while (!inCheckPoint());
+
+				while (inCheckPoint());
+
+				while (!inCheckPoint());
+
+				// delay(200); // mid
+				brake();
+				return;
+			case CHECK_POINT_2_KEEP:
+			case CHECK_POINT_14_wPICTURE:
+			case CHECK_POINT_15_WRITE:
+				forward();
+				if (l + r != MAX_SEN)
+				{
+					entered_check_point = false;
+				}
+				break;
+			case CHECK_POINT_9_BREAK:
+				static bool correct = false;
+
+			
+				if (!correct)
+				{
+					spin('L', 180);
+					delay(80);
+					brake();
+					correct = true;
+				}
+			case CHECK_POINT_10_BREAK:
+			case CHECK_POINT_11_BREAK:
+				forward(180);
+				delay(100);
+				if (l + r != MAX_SEN)
+				{
+					entered_check_point = false;
+				}
+				break;
+
+			/// turn right for 90 degrees
+			case CHECK_POINT_12_rSPIN:
+				forward(200);
+				delay(500);
+				if (inCheckPoint())
+				{
+					spin('R', 180);
+					do
+					{
+						read_sensor();
+					} while (l);
+					brake(10);
+					entered_check_point = false;
+				}
+				move_mode = MOVE_MODE_GENERAL;
+				break;
+			/// sign-stand
+			case CHECK_POINT_4_KNOCK:
+				if (inCheckPoint())
+				{
+					forward();
+					//printf_serial("over\n"); ////////////////
+					delay(50);
+					brake();
+					entered_check_point = false;
+					return;
+				}
+				break;
+			/// pick up pen
+			case CHECK_POINT_13_PICK:
+				//printf_serial(".\n"); ////////////////
+				if (inCheckPoint())
+				{
+					forward();
+					//printf_serial("over\n"); ////////////////
+					delay(50);
+					brake();
+					entered_check_point = false;
+					return;
+				}
+				break;
+			/// put down pen
+			case CHECK_POINT_16_DROP:
+				forward();
+				if (inCheckPoint())
+				{
+					delay(50);
+					brake();
+					entered_check_point = false;
+					return;
+				}
+
 			}
-			delay(200);
+			
 			
 		}
-	}
-	*/
-	//else		// line-following mode
-	{
-		uint8_t last[6] = { 0,0,0,0,0,0 };
 
-		uint8_t rt = 0, ct = 0;
-
-		static uint8_t check_num = 13-1;
-		static bool inCheck = false;
-
-		bool leave_check_point = false;
-		if (mode == WHEEL_MOVE_GO)
+		/// Touch check point
+		if (l + r == MAX_SEN)
 		{
-			forward(MAX_PWM);
-			delay(500);
+			if (!entered_check_point && touch_check_point())
+				entered_check_point = true;
 
-			while (1)
+			forward();
+			delay(10);
+			continue;
+		}
+		
+		//enter_check_point = false;
+
+		if (l > r)
+		{
+			//printf_serial("R");
+
+			right();
+			do
 			{
-
-				//if (rt++ >= read_times)
+				read_sensor();
+				if(touch_check_point())
 				{
-					//for (int i = 0; i < 6; i++)
-					//printf_serial("%d ", sensors[i]);
-
-					//printf_serial(" => ");
-					uint8_t l, r;		// numbers in non-line area
-											 //for (l = 0; last[l] > read_times/2 && l < max_sen / 2; l++);
-											//for (r = 0; last[max_sen - r - 1] > read_times / 2 && r < max_sen / 2; r++);
-					static uint8_t ll, lr;
-					//noInterrupts();
-
-					//l = digitalRead(sensors_num[0]);
-					//l += digitalRead(sensors_num[1]);
-					//l += digitalRead(sensors_num[2]);
-
-					//r = digitalRead(sensors_num[3]);
-					//r += digitalRead(sensors_num[4]);
-					//r += digitalRead(sensors_num[5]);
-					//interrupts();
-
-					noInterrupts();
-					uint8_t IN_C = PINC;
-					interrupts();
-					l = (IN_C >> 4) & 1;// PE4
-					l += (IN_C >> 6) & 1;// PE5
-					l += (IN_C >> 7) & 1;// PE3
-					r = (IN_C >> 5) & 1;// PH3
-					r += (IN_C >> 3) & 1;// PH5
-					r += (IN_C >> 1) & 1;// PH6
-
-					//printf_serial("%d %d\n", l, r);
-					if (inCheck)
-					{
-						if (check_num == 4 )
-						{
-							check_num++;
-
-							while (isCheckPoint(pin));
-							
-							inCheck = false;
-							backward(MAX_PWM);
-							delay(70);
-							halt();
-							// correct line error
-							delay(1000);
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-								l = digitalRead(sensors_num[0]);
-								l += digitalRead(sensors_num[1]);
-								l += digitalRead(sensors_num[2]);
-
-								r = digitalRead(sensors_num[3]);
-								r += digitalRead(sensors_num[4]);
-								r += digitalRead(sensors_num[5]);
-								
-								if (l > r)
-								{
-									spin('R');
-								}
-								else if (r > l)
-								{
-									spin('L');
-								}
-							}
-							while (abs(l-r) > 1);
-							if (l > r)
-								spin('L');
-							else
-								spin('R');
-							halt();
-							delay(100);
-
-							{
-
-								backward(200);
-								delay(1000);
-								forward(255);
-								delay(30);
-								halt();
-							}
-							break;
-						}
-						// to correct the IR error causing by check point
-						else if (l < 3 && r < 3 && abs(l - r) <= 1)
-						{
-							inCheck = false;
-						}
-						else
-						{
-							continue;
-						}
-					}
-					if (l == 3 && r == 3)
-					{
-						static uint8_t isCheck_accuracy = 0;
-
-						if (isCheck_accuracy++ < 10)
-						{
-							delay(10);
-							continue;
-						}
-
-
-						isCheck_accuracy = 0;
-						check_num++;
-						//printf_serial("check point %d\n", check_num);
-						
-
-						// correct error before entering check point
-						delay(100);
-
-
-
-						if (check_num == 1)
-						{
-							{
-								forward(MAX_PWM);
-								delay(400);
-							}
-							
-							break;
-						}
-						else if (check_num == 4 || check_num == 14 || check_num == 15)
-						{
-							int stable = 0;
-							forward(200);
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-								l = (IN_C >> 4) & 1;// PE4
-								l += (IN_C >> 6) & 1;// PE5
-								l += (IN_C >> 7) & 1;// PE3
-								r = (IN_C >> 5) & 1;// PH3
-								r += (IN_C >> 3) & 1;// PH5
-								r += (IN_C >> 1) & 1;// PH6
-
-								if (l + r < 6)
-									stable++;
-							} while (stable < 3);
-
-							if(check_num == 4)
-								inCheck = true;
-							continue;
-						}
-						else if (check_num == 6)
-						{
-							int bend = (check_num == 12) ? 1 : 0;
-							forward(MAX_PWM);
-							delay(100);
-							left(2);
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-								l = (IN_C >> 4) & 1;// PE4
-								l += (IN_C >> 6) & 1;// PE5
-								l += (IN_C >> 7) & 1;// PE3
-
-							} while (l > bend);
-						}
-						else if (check_num == 7)
-						{
-							forward(MAX_PWM/2);
-							delay(500);
-							left(2);
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-
-								r = (IN_C >> 5) & 1;// PH3
-								r += (IN_C >> 3) & 1;// PH5
-								r += (IN_C >> 1) & 1;// PH6
-
-							} while (r > 2);
-						}
-						else if (check_num == 8)
-						{
-							forward(MAX_PWM);
-							delay(100);
-							right(2);
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-								
-								r = (IN_C >> 5) & 1;// PH3
-								r += (IN_C >> 3) & 1;// PH5
-								r += (IN_C >> 1) & 1;// PH6
-
-							} while (r);
-						}
-						else if (check_num == 9 || check_num == 10 || check_num == 11)
-						{
-							forward(MAX_PWM);
-							delay(300);
-							//int times = 0;
-							if(check_num == 9)
-								spin('L');
-							delay(100);
-							//do
-							{
-								delay(10);
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-								l = (IN_C >> 4) & 1;// PE4
-								l += (IN_C >> 6) & 1;// PE5
-								l += (IN_C >> 7) & 1;// PE3
-								r = (IN_C >> 5) & 1;// PH3
-								r += (IN_C >> 3) & 1;// PH5
-								r += (IN_C >> 1) & 1;// PH6
-								//times++;
-								if (l > r)
-									spin('R');
-								else if (r > l)
-									spin('L');
-								delay(300);
-								continue;
-
-								continue;
-									
-							};//while (times < 100);
-
-							//times = 0;
-							//spin('R');
-							//do
-							//{
-							//	delay(20);
-							//	noInterrupts();
-							//	uint8_t IN_C = PINC;
-							//	interrupts();
-							//	l = (IN_C >> 4) & 1;// PE4
-							//	l += (IN_C >> 6) & 1;// PE5
-							//	l += (IN_C >> 7) & 1;// PE3
-							//	r = (IN_C >> 5) & 1;// PH3
-							//	r += (IN_C >> 3) & 1;// PH5
-							//	r += (IN_C >> 1) & 1;// PH6
-							//} while (abs(l - r) > 1 && l+r >= 5);
-
-						}
-						else if (check_num == 12)
-						{
-							forward(200);
-							while (!isCheckPoint(pin));
-							delay(200);
-							spin('R');
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-
-								r = (IN_C >> 5) & 1;// PH3
-								r += (IN_C >> 3) & 1;// PH5
-								r += (IN_C >> 1) & 1;// PH6
-
-							} while (r > 1);
-
-						}
-						else if (check_num == 2 || check_num == 3 || check_num == 13)
-						{
-							forward(200);
-
-							int stable = 0;
-							do
-							{
-								noInterrupts();
-								uint8_t IN_C = PINC;
-								interrupts();
-								l = (IN_C >> 4) & 1;// PE4
-								l += (IN_C >> 6) & 1;// PE5
-								l += (IN_C >> 7) & 1;// PE3
-								r = (IN_C >> 5) & 1;// PH3
-								r += (IN_C >> 3) & 1;// PH5
-								r += (IN_C >> 1) & 1;// PH6
-
-								if (l + r < 6)
-									stable++;
-								delay(10);
-							}
-							while (stable < 5);
-
-							//int correct_times = 0;
-							//do
-							//{
-							//	noInterrupts();
-							//	uint8_t IN_C = PINC;
-							//	interrupts();
-							//	l = (IN_C >> 4) & 1;// PE4
-							//	l += (IN_C >> 6) & 1;// PE5
-							//	l += (IN_C >> 7) & 1;// PE3
-							//	r = (IN_C >> 5) & 1;// PH3
-							//	r += (IN_C >> 3) & 1;// PH5
-							//	r += (IN_C >> 1) & 1;// PH6
-
-							//	if (l == r)
-							//		forward(255);
-							//	else if (l > r)
-							//		right(l - r);
-							//	else
-							//		left(r - l);
-							//	delay(10);
-							//} while (correct_times++ < 20);
-
-							if (check_num == 13)
-								break;
-						}
-						// leave task 1
-						else if (check_num == 5)
-						{
-
-						}
-						// put down pen
-						else if (check_num == 16)
-						{
-
-						}
-					}
-					else if (l == ll && r == lr);
-					else if (l == r)
-					{
-						//printf_serial("go %d %d\n", l, r);
-						forward(MAX_PWM);
-					}
-					else if (r > l)
-					{
-						//printf_serial("left %d\n", r-l);
-						left(r - l);
-					}
-					else
-					{
-						//printf_serial("right %d\n", l-r);
-						right(l - r);
-					}
-					rt = 0;
-					ll = l;
-					lr = r;
+					//printf_serial("Touch Check\n"); //////////
+					entered_check_point = true;
+					break;
 				}
-				delayMicroseconds(50);
-			}
+				//delay(10);
+
+			} while (l);
+			//forward(f_speed);
 		}
-		else if (mode == WHEEL_MOVE_BACK)
+		else if (r > l)
 		{
-			backward(MAX_PWM);
-			delay(1000);
-			while (!isCheckPoint(pin));
+			//printf_serial("L");
+
+			left();
+			do
+			{
+				read_sensor();
+				if (touch_check_point())
+				{
+					entered_check_point = true;
+					break;
+				}
+				//delay(10);
+			} while (r);
+			//forward(f_speed);
 		}
-	
-		//delay(200);
-		// eliminate inertia
-		if (mode == WHEEL_MOVE_GO)
+		else
 		{
-			backward(MAX_PWM);
-			delay(30);
-			//left(3);
-			//delay(30);
+			forward();
+			delay(10);
 		}
-		else if (mode == WHEEL_MOVE_BACK)
+		delay(1);
+		// delay(1);
+	}
+
+	brake();
+}
+void Wheel::brake(unsigned long msec = 30)
+{
+	if (dir == FORWARD)
+		backward(MAX_PWM);
+	else if (dir == BACKWARD)
+		forward(MAX_PWM);
+	else if (dir == LSPIN)
+		spin('R');
+	else if (dir == RSPIN)
+		spin('L');
+	delay(msec);
+	halt();
+}
+void Wheel::setTurnMode(uint8_t mode)
+{
+	move_mode = mode;
+}
+void Wheel::forward(uint8_t pwm = 0)
+{
+	if (pwm)
+	{
+		if (dir != FORWARD)
 		{
-			forward(MAX_PWM / 4);
-			right(3);
-			delay(30);
+			digitalWrite(pin.M1, HIGH);
+			digitalWrite(pin.M2, HIGH);
+			dir = FORWARD;
 		}
-		halt();
-		delay(1000);
-		return;
+		analogWrite(pin.MOT_1, pwm);
+		analogWrite(pin.MOT_2, pwm);
+	}
+	else
+	{
+		if (dir != FORWARD)
+		{
+			digitalWrite(pin.M1, HIGH);
+			digitalWrite(pin.M2, HIGH);
+			dir = FORWARD;
+		}
+		if (move_mode = MOVE_MODE_GENERAL)
+		{
+			analogWrite(pin.MOT_1, MAX_PWM);
+			analogWrite(pin.MOT_2, MAX_PWM);
+		}
+		else if (move_mode = MOVE_MODE_SMALL_TURN)
+		{
+			analogWrite(pin.MOT_1, 200);
+			analogWrite(pin.MOT_2, 200);
+		}
+		else if (move_mode = MOVE_MODE_BIG_TURN)
+		{
+			analogWrite(pin.MOT_1, 130);
+			analogWrite(pin.MOT_2, 130);
+		}
 	}
 }
-void Wheel::forward(int pwm) 
+void Wheel::backward(uint8_t pwm)
 {
-	if (!dir)
+	if (dir != BACKWARD)
 	{
-		digitalWrite(pin.M1, HIGH);
-		digitalWrite(pin.M2, HIGH);
-		dir = true;
-	}
-	analogWrite(pin.MOT_1, pwm);
-	analogWrite(pin.MOT_2, pwm);
-}
-void Wheel::backward(int pwm) 
-{
-
-	digitalWrite(pin.M1, LOW);
-	digitalWrite(pin.M2, LOW);
-	
-	analogWrite(pin.MOT_1, pwm);
-	analogWrite(pin.MOT_2, pwm);
-	dir = false;
-}
-void Wheel::read_sensor()
-{
-#ifdef __WHEEL__
-	noInterrupts();
-	byte IN_C = PINC;
-	interrupts();
-
-	//static const uint8_t threshold = 200;
-	//for (int i = 0; i < max_sen; i++)
-	{
-		//sensors[i] = analogRead(sensors_num[i]);
-		//sensors[i] = digitalRead(sensors_num[i]);
-		//printf_serial("%u ", sensors[i]);
-	}
-	//printf_serial("\n");
-
-	sensors[0] = (IN_C >> 4) & 1;// PE4
-	sensors[1] = (IN_C >> 6) & 1;// PE5
-	sensors[2] = (IN_C >> 7) & 1;// PE3
-	sensors[3] = (IN_C >> 5) & 1;// PH3
-	sensors[4] = (IN_C >> 3) & 1;// PH5
-	sensors[5] = (IN_C >> 1) & 1;// PH6
-
-	for (int i = 0; i < max_sen; i++)
-	{
-		printf_serial("%d ", sensors[i]);
-	}
-	printf_serial("\n");
-#endif // __WHEEL__
-	
-}
-void Wheel::left(int bend) 
-{
-	
-	//analogWrite(pin.MOT_1, MAX_PWM);
-	//analogWrite(pin.MOT_2, 0);
-
-	switch (bend)
-	{
-	case 1:
-		//printf_serial("left 1\n");
-		analogWrite(pin.MOT_1, 255);
-		analogWrite(pin.MOT_2, 0);
-		break;
-	case 2:
-		//printf_serial("left 2\n");
-		analogWrite(pin.MOT_1, MAX_PWM);
-		analogWrite(pin.MOT_2, MIN_PWM);
-
-		break;
-	default:
-		//printf_serial("left >= 3\n");
-		digitalWrite(pin.M2, LOW);
-		analogWrite(pin.MOT_1, 200);
-		analogWrite(pin.MOT_2, 150);
-		delay(100);
-		analogWrite(pin.MOT_2, MIN_PWM);
-		digitalWrite(pin.M2, HIGH);
-		break;
-	}
-
-}
-void Wheel::right(int bend) 
-{
-	//analogWrite(pin.MOT_2, MAX_PWM);
-	//analogWrite(pin.MOT_1, 0);
-	//bend = 2;
-	switch (bend)
-	{
-	case 1:
-		//printf_serial("right 1\n");
-		analogWrite(pin.MOT_2, 255);
-		analogWrite(pin.MOT_1, 0);
-		break;
-	case 2:
-		//printf_serial("right 2\n");
-		analogWrite(pin.MOT_2, MAX_PWM);
-		analogWrite(pin.MOT_1, MIN_PWM);
-		break;
-	default:
-		//printf_serial("right >= 3\n");
 		digitalWrite(pin.M1, LOW);
-		analogWrite(pin.MOT_2, 200);
-		analogWrite(pin.MOT_1, 150);
-		delay(100);
-		analogWrite(pin.MOT_1, MIN_PWM);
-		digitalWrite(pin.M1, HIGH);
-		break;
+		digitalWrite(pin.M2, LOW);
+		dir = BACKWARD;
 	}
+	
+	analogWrite(pin.MOT_1, pwm);
+	analogWrite(pin.MOT_2, pwm);
 }
-void Wheel::spin(int dir) const
+inline void Wheel::read_sensor()
+{
+	noInterrupts();
+	uint8_t IN_C = PINC;
+	interrupts();
+	//interrupts();
+	
+	l = (IN_C >> 6) & 1;// PE5
+	l += (IN_C >> 7) & 1;// PE3
+	r = (IN_C >> 5) & 1;// PH3
+	r += (IN_C >> 3) & 1;// PH5
+
+	ch = (IN_C >> 4) & 1;
+	ch += (IN_C >> 1) & 1;
+
+	//printf_serial("%d %d %d\n", l, r, ch); /////////
+}
+void Wheel::left()
+{
+	uint8_t bend = r - l;
+	if(move_mode == MOVE_MODE_GENERAL)
+		switch (bend)
+		{
+		case 1:
+			//printf_serial("left 1\n");
+			analogWrite(pin.MOT_1, 150);
+			analogWrite(pin.MOT_2, 0);
+			break;
+		default:
+			//printf_serial("left 2\n");
+			//analogWrite(pin.MOT_1, MAX_PWM);
+			analogWrite(pin.MOT_1, 200);
+			analogWrite(pin.MOT_2, MIN_PWM);
+
+			break;
+		}
+	else if(move_mode == MOVE_MODE_SMALL_TURN)
+		switch (bend)
+		{
+		default:
+			//printf_serial("left >= 3\n");
+			//digitalWrite(pin.M2, LOW);
+			analogWrite(pin.MOT_1, 200);
+			analogWrite(pin.MOT_2, MIN_PWM);
+			//delay(30);
+			//analogWrite(pin.MOT_2, MIN_PWM);
+			//digitalWrite(pin.M2, HIGH);
+			//break;
+		}
+	else if(move_mode == MOVE_MODE_BIG_TURN)
+		switch (bend)
+		{
+		default:
+			analogWrite(pin.MOT_1, 175);
+			analogWrite(pin.MOT_2, 0);
+		}
+
+	dir = LEFT;
+}
+void Wheel::right()
+{
+	uint8_t bend = l - r;
+	if(move_mode == MOVE_MODE_GENERAL)
+		switch (bend)
+		{
+		case 1:
+			//printf_serial("right 1\n");
+			analogWrite(pin.MOT_2, 150);
+			analogWrite(pin.MOT_1, MIN_PWM);
+			break;
+		case 2:
+			//printf_serial("right 2\n");
+			//analogWrite(pin.MOT_2, MAX_PWM);
+			analogWrite(pin.MOT_2, 200);
+			analogWrite(pin.MOT_1, MIN_PWM);
+			break;
+		}
+	else if(move_mode == MOVE_MODE_SMALL_TURN)
+		switch (bend)
+		{
+		default:
+			analogWrite(pin.MOT_2, 200);
+			analogWrite(pin.MOT_1, 0);
+			break;
+		}
+	else if(move_mode == MOVE_MODE_BIG_TURN)
+		switch (bend)
+		{
+		default:
+			//printf_serial("right >= 3\n");
+			//digitalWrite(pin.M1, LOW);
+			analogWrite(pin.MOT_2, 175);
+			analogWrite(pin.MOT_1, 0);
+			/*delay(100);
+			analogWrite(pin.MOT_1, MIN_PWM);
+			digitalWrite(pin.M1, HIGH);
+			break;*/
+		}
+	dir = RSPIN;
+}
+void Wheel::spin(int dir, uint8_t pwm = 255)
 {
 	if (dir == 'L')
 		// left
 	{
 		digitalWrite(pin.M1, HIGH);
 		digitalWrite(pin.M2, LOW);
+
+		dir = LSPIN;
 	}
 	else
 	{
 		digitalWrite(pin.M1, LOW);
 		digitalWrite(pin.M2, HIGH);
+
+		dir = RSPIN;
 	}
-	analogWrite(pin.MOT_1, 150);
-	analogWrite(pin.MOT_2, 150);
-	dir = false;
+	analogWrite(pin.MOT_1, pwm);
+	analogWrite(pin.MOT_2, pwm);
+	
 }
 #endif
 
@@ -638,7 +538,7 @@ void Wheel::spin(int dir) const
 Slider::Slider(PinSet pin) : Car(pin)
 {
 }
-void Slider::move(uint8_t mode, float dt)
+void Slider::move(uint8_t mode, float dt, uint8_t pwm = 255)
 // mode : counting time / distance
 // dt : time or distance depending on mode
 {
@@ -666,51 +566,76 @@ void Slider::move(uint8_t mode, float dt)
 	Timer1.attachInterrupt(time_tick);
 
 	// move base on time
-	if (mode == SLIDER_MOVE_T)
+	if (mode == SLIDER_MOVE_T || mode == SLIDER_MOVE_TEST)
 	{
 		if (back)
-			backward(MAX_PWM);
+			backward(pwm);
 		else
-			forward(MAX_PWM);		
-		while (t < (unsigned long)(time * 100));
+			forward(pwm);
+		if (mode == SLIDER_MOVE_TEST)
+			while (Serial.read() == -1);
+		else if(mode == SLIDER_MOVE_T)
+			while (t < (unsigned long)(time * 100));
+
+		// PICK PEN V : 5.99, 6.21 [6.17]
+		// DROP PEN V : 12.8
 		if (back)
-			forward(MAX_PWM);
+			forward(pwm);
 		else
-			backward(MAX_PWM);
+			backward(pwm);
 		Timer1.detachInterrupt();
-		//printf_serial("Time = %ld\n", t); //////////
+		printf_serial("Time = %ld\n", t); //////////
 		t = 0;
-		delay(20);
+		delay(25);
 		halt();
 
 		//printf_serial("Time = %lu (0.001s)\n", t);
 		return;
 	}
-	/*
-	f		b
-	4.527   4.616
-	4.516	4.672
-	4.526	4.674
-	*/
 
 	// move base on distance
 	else if (mode == SLIDER_MOVE_D)
 	{
-		if (dt >= 0)
+		printf_serial("Position Mode\n");//////
+		pinMode(20, INPUT);  // V
+		pinMode(21, INPUT);  // H
+
+		if (back)
 		{
-			forward(MAX_PWM);
+			backward(pwm);
 		}
 		else
 		{
-			backward(MAX_PWM);
-			dt = -dt;
+			forward(pwm);
 		}
-			
-		while (t * speed < dt * 100);
+		
+		int pos = 0;
+		while (pos < 2)
+		{
+			static uint8_t last_ri = 1;
+			if (digitalRead(20) != last_ri)
+			{
+				printf_serial("!");
+				if (last_ri == 0)
+				{
+					pos++;
+				}
+				last_ri = !last_ri;
+			}
+			delay(20);
+		}
+		if (back)
+			forward(pwm);
+		else
+			backward(pwm);
 		Timer1.detachInterrupt();
+		//printf_serial("Time = %ld\n", t); //////////
+		t = 0;
+		delay(25);
 		halt();
 		return;
 	}
+
 
 }
 void Slider::forward(uint8_t pwm) const
