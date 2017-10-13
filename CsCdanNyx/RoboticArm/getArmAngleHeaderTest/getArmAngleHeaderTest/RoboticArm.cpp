@@ -29,7 +29,7 @@ void RoboticArmClass::initServo()
 
 int RoboticArmClass::initPosit(float ix, float iy, float iz, float angSpeed)
 {
-	this->penHold = false;
+	//this->penHold = false;
 
 	initXYZ[0] = ix;
 	initXYZ[1] = iy;
@@ -37,6 +37,11 @@ int RoboticArmClass::initPosit(float ix, float iy, float iz, float angSpeed)
 	armGoDirect(ix, iy, iz, angSpeed);
 
 	return 1;
+}
+
+void RoboticArmClass::setTilt(float AngInDegree)
+{
+	this->tiltAngle = AngInDegree / Rad2Degree;
 }
 
 int RoboticArmClass::ArmErrorHandle()
@@ -216,13 +221,13 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Deg, 
 
 	if (isAngExcess(Ang, setError))
 	{
-#ifdef ErrorOut
+#ifdef ExcessedErrorOut
 		Serial.print("Cal Ang excessed, ");
 		printOut(xp, "xp", ", ");
 		printOut(yp, "yp", ", ");
 		printOut(zp, "zp");
 		printOut(Ang, 6, "Cal Ang: ");
-#endif // ErrorOut
+#endif // ExcessedErrorOut
 
 #ifdef	ErrorHandle
 		if (setError)
@@ -341,14 +346,9 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 
 	getArmAngleDeg(xd, yd, zd, Ang, true);
 
-	if (this->needPenlift)
-	{
-		Ang[5] -= this->penliftAng;
-	}
-
 #ifdef DEBUG
-	//printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
-	//showXYZ();
+	printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
+	//showXYZ("Dest XYZ: ");
 #endif // DEBUG
 
 	for (size_t i = 0; i < 5; i++)
@@ -371,18 +371,18 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 			J[i] += sign[i] * angSpeed;
 
 			// Error checking
-#ifdef	ErrorHandle
 			if ((baseDegree[i] + J[i]) > 180 || (baseDegree[i] + J[i]) < 0)
 			{
 				this->ERRcode = 1;
-#ifdef ErrorOut
+#ifdef ExcessedErrorOut
 				Serial.print("Ang excessed in GoDir, ");
 				printOut(Ang, 6, "Ang: ");
-#endif // ErrorOut
+#endif // ExcessedErrorOut
+#ifdef	ErrorHandle
 				J[i] -= sign[i] * angSpeed;
 				ArmErrorHandle();
-			}
 #endif // ErrorHandle
+			}
 
 		}
 
@@ -669,48 +669,51 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 }
 
 // H3 /**----------------------Writing-----------------------------**/
-void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
-{
-	if (UpvDn == 'u')
-		Ang[4] += penliftAng;
-	else
-		Ang[4] -= penliftAng;
+//void RoboticArmClass::LiftPen(float * Ang, char UpvDn, float penliftAng)
+//{
+//	if (UpvDn == 'u')
+//		Ang[4] += penliftAng;
+//	else
+//		Ang[4] -= penliftAng;
+//
+//	servoAct();
+//}
 
-	servoAct();
-}
-
-void RoboticArmClass::setPenLift(float * Ang, char UpvDn, float penAng)
-{
-	if (UpvDn == 'u')
-	{
-		this->penliftAng = penAng;
-		this->needPenlift = true;
-	}
-	else
-	{
-		this->penliftAng = -penAng;
-		this->needPenlift = false;
-	}
-}
+//void RoboticArmClass::setPenLift(float * Ang, char UpvDn, float penAng)
+//{
+//	if (UpvDn == 'u')
+//	{
+//		this->penliftAng = penAng;
+//		this->needPenlift = true;
+//	}
+//	else
+//	{
+//		this->penliftAng = -penAng;
+//		this->needPenlift = false;
+//	}
+//}
 
 void RoboticArmClass::chooseWord(char TDKorNFU)
 {
-	Letters.initWord(TDKorNFU);
+	Letters.setWord(TDKorNFU);
 }
 
 void RoboticArmClass::writeLetter(char clet)
 {
 	//uint8_t PenNibClawDIS = 145 - 67 - 10;			// Pen length - work point and interruptor - distance to the end of the pen.
-	this->tiltAngle = 60 / Rad2Degree;
+	setTilt(60);
 	float liftHeight[2] = { -10 * sin(this->tiltAngle), 10 * cos(this->tiltAngle) };	// Lift Pen Height for x and z.
 	bool isUP = false;		// Is pen up or down.
 
 	armGoDirect(this->initXYZ);
-	Letters.initLetter(clet, M_PI_2 - this->tiltAngle);
-	
+	Letters.initLetter(clet);
+	Letters.tiltLetter(M_PI_2 - this->tiltAngle);
+#ifdef DEBUG
+	showXYZ("\nStart Writing!!\n");
+#endif // DEBUG	
 	armGoLine(Letters.getLetPts());
 #ifdef DEBUG
-	showXYZ("Start Writing!!\n");
+	showXYZ("In ");
 #endif // DEBUG
 
 	while (Letters.nextPoint())
@@ -749,10 +752,10 @@ void RoboticArmClass::writeLetter(char clet)
 		//showXYZ();
 #endif // DEBUG
 	}
-
-	armGoDirect((float*)this->initXYZ);
+	Letters.deleteLetter();
+	armGoDirect(this->initXYZ);
 #ifdef DEBUG
-	showXYZ("Finished Writing!!");
+	showXYZ("Finished Writing!!\n");
 #endif // DEBUG
 }
 

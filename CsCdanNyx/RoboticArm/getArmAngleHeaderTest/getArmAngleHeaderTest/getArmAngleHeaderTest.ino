@@ -42,8 +42,9 @@ void setup() {
 
 
 	Arm.chooseWord('T');
+	Arm.writeLetter('T');
 	Arm.writeLetter('D');
-
+	Arm.writeLetter('K');
 
 	Arm.showJ("\nEnding J: ");
 	Serial.println("End setup!!");

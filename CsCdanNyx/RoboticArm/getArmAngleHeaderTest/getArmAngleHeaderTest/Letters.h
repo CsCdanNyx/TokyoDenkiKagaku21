@@ -9,6 +9,9 @@
 	#include "WProgram.h"
 #endif
 
+// Enable debugging
+#define DEBUG
+
 /// Duplicated defines needed configurations.
 /// 
 #define DegPrecision	3			// Preferred: 3 with speed 0.25, angSpeed 1. Angle's decimal precision.
@@ -40,12 +43,16 @@ class LettersClass
 
  public:
 
-	void init(char TDKvNFU, float tiltang);
-
-	void initWord(char TDKvNFU);
-	void initLetter(char alet, float tiltang);
-
+	void setWord(char TDKvNFU);
+	void initLetter(char alet);
+	void tiltLetter(float tiltangInRad);
+	void deleteLetter();
 	//friend class RoboticArmClass;
+
+	/*----------------------------Return Points-----------------------------------*/
+	float * getLetPts();	// Get current Letter's iterating point
+	char getLetLift();		// Get current Letter's iterating point's penlift
+	bool nextPoint();		// Iterate to current Letter's next point. If next null, return false.
 
 	/*----------------------------Print and Show----------------------------------*/
 	void showLetterStrokes(uint8_t No = 4, bool printLift = true, const String& title = String());
@@ -53,11 +60,6 @@ class LettersClass
 	
 	void iterPrint();
 	//void ADDpts(float despts[3], float srcpts[3], float px, float py, float pz);
-
-	/*----------------------------Return Points-----------------------------------*/
-	float * getLetPts();	// Get current Letter's iterating point
-	char getLetLift();		// Get current Letter's iterating point's penlift
-	bool nextPoint();		// Iterate to current Letter's next point. If next null, return false.
 
  private:
 	 char TDKorNFU;
@@ -69,7 +71,7 @@ class LettersClass
 	 aLetter * currentLetter = nullptr;
 
 	 //void ptsAssign(float tmppts[3], float px, float py, float pz);
-	 void ADDpts(float despts[3], float srcpts[3], float px, float py, float pz);
+	 void ADDpts(uint8_t despts, uint8_t srcpts /*, float px, float py, float pz*/);
 	
 	 aLetter * getALetter(char clet);
 };

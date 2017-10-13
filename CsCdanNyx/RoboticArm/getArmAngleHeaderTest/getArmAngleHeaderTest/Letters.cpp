@@ -4,91 +4,202 @@
 
 #include "Letters.h"
 
-void LettersClass::init(char TDKvNFU, float tiltang)
-{
 
-
-}
-
-void LettersClass::initWord(char TDKvNFU)
+void LettersClass::setWord(char TDKvNFU)
 {
 	if (TDKvNFU == 'T')
 	{
 		this->TDKorNFU = 'T';	// Choose TDK
-		
-		// Letter T
-		this->letterOne->LetOrigin[0] = 380;
-		this->letterOne->LetOrigin[1] = -65;
-		this->letterOne->LetOrigin[2] = 340;
-
-		this->letterOne->letSize = 4;
-		this->letterOne->letPts = new LetterPts[this->letterOne->letSize]{
-			{ 'd',{  -10, -10,  -10 } },
-			{ 'u',{  -10, 140,  -10 } },
-			{ 'd',{   10,  65,   10 } },
-			{ 'u',{ -155,  65, -155 } }
-		};
-		// Letter D
-		this->letterOne->LetOrigin[0] = 380;
-		this->letterOne->LetOrigin[1] = -65;
-		this->letterOne->LetOrigin[2] = 340;
-
-		this->letterTwo->letSize = 10;
-		this->letterTwo->letPts = new LetterPts[this->letterTwo->letSize]{
-			{ 'd',{   10,     10,   10 } },
-			{ 'u',{ -155,     10, -155 } },
-			{ 'd',{    0,      0,    0 } },
-			{ 'd',{    0,      0,    0 } },
-			{ 'd',{    0,      0,    0 } },
-			{ 'd',{    0,      0,    0 } },
-			{ 'd',{    0,      0,    0 } },
-			{ 'd',{    0,      0,    0 } },
-			{ 'd',{  -10, 46.54f,  -10 } },
-			{ 'u',{  -10,    -10,  -10 } },
-		};
-
-		ADDpts(this->letterTwo->letPts[2].pts, this->letterTwo->letPts[3].pts,       0,     -84,       0);
-		ADDpts(this->letterTwo->letPts[3].pts, this->letterTwo->letPts[4].pts, -17.17f, -25.15f, -17.17f);
-		ADDpts(this->letterTwo->letPts[4].pts, this->letterTwo->letPts[5].pts, -29.98f, -13.09f, -29.98f);
-		ADDpts(this->letterTwo->letPts[5].pts, this->letterTwo->letPts[6].pts,     -65,   6.34f,     -65);
-		ADDpts(this->letterTwo->letPts[6].pts, this->letterTwo->letPts[7].pts, -30.51f,  35.03f, -30.51f);
-		ADDpts(this->letterTwo->letPts[7].pts, this->letterTwo->letPts[8].pts,  -2.83f,  25.43f,  -2.83f);
-
-		// Letter K
-
-
 	}
 	else if (TDKvNFU == 'N')
 	{
 		this->TDKorNFU = 'N';	// Choose NFU
-		// Letter N
-
-		// Letter F
-
-		// Letter U
-
 	}
 	else
 		Serial.println("??");
 }
 
-void LettersClass::initLetter(char clet, float tiltang)
+void LettersClass::initLetter(char alet)
 {
-	currentLetter = getALetter(clet);
-	for (size_t i = 0; i < currentLetter->letSize; i++)
+	if (this->TDKorNFU == 'T')
 	{
-		currentLetter->letPts[i].pts[0] = currentLetter->LetOrigin[0] + currentLetter->letPts[i].pts[0] * sin(tiltang);
-		currentLetter->letPts[i].pts[1] = currentLetter->LetOrigin[1] + currentLetter->letPts[i].pts[1];
-		currentLetter->letPts[i].pts[2] = currentLetter->LetOrigin[2] + currentLetter->letPts[i].pts[2] * cos(tiltang);
+		if (alet == 'T')			// Letter T
+		{
+			this->currentLetter = new aLetter;
+			currentLetter->iterPtr = new size_t();
+			currentLetter->LetOrigin[0] = 380;
+			currentLetter->LetOrigin[1] = -65;
+			currentLetter->LetOrigin[2] = 340;
+
+			currentLetter->letSize = 4;
+			currentLetter->letPts = new LetterPts[currentLetter->letSize]{
+				{ 'd',{  -10, -10,  -10 } },
+				{ 'u',{  -10, 140,  -10 } },
+				{ 'd',{   10,  65,   10 } },
+				{ 'u',{ -155,  65, -155 } }
+			};
+
+		}
+		else if (alet == 'D')		// Letter D
+		{
+			this->currentLetter = new aLetter;
+			currentLetter->iterPtr = new size_t();
+			currentLetter->LetOrigin[0] = 380;
+			currentLetter->LetOrigin[1] = -65;
+			currentLetter->LetOrigin[2] = 340;
+
+			currentLetter->letSize = 10;
+			currentLetter->letPts = new LetterPts[currentLetter->letSize]{
+				{ 'd',{      10,      10,      10 } },
+				{ 'u',{    -155,      10,    -155 } },
+				{ 'd',{       0,     -84,       0 } },		//0
+				{ 'd',{ -17.17f, -25.15f, -17.17f } },		//0
+				{ 'd',{ -29.98f, -13.09f, -29.98f } },		//0
+				{ 'd',{     -65,   6.34f,     -65 } },		//0
+				{ 'd',{ -30.51f,  35.03f, -30.51f } },		//0
+				{ 'd',{  -2.83f,  25.43f,  -2.83f } },		//0
+				{ 'd',{    -10,   46.54f,     -10 } },
+				{ 'u',{    -10,      -10,     -10 } },
+			};
+
+			ADDpts(7, 8);
+			ADDpts(6, 7);
+			ADDpts(5, 6);
+			ADDpts(4, 5);
+			ADDpts(3, 4);
+			ADDpts(2, 3);
+
+			//ADDpts(2, 3, 0, -84, 0);
+			//ADDpts(3, 4, -17.17f, -25.15f, -17.17f);
+			//ADDpts(4, 5, -29.98f, -13.09f, -29.98f);
+			//ADDpts(5, 6, -65, 6.34f, -65);
+			//ADDpts(6, 7, -30.51f, 35.03f, -30.51f);
+			//ADDpts(7, 8, -2.83f, 25.43f, -2.83f);
+
+		}
+		else if (alet == 'K')		// Letter K
+		{
+			this->currentLetter = new aLetter;
+			currentLetter->iterPtr = new size_t();
+			currentLetter->LetOrigin[0] = 0;
+			currentLetter->LetOrigin[1] = 0;
+			currentLetter->LetOrigin[2] = 0;
+
+			currentLetter->letSize = 6;
+			currentLetter->letPts = new LetterPts[currentLetter->letSize]{
+				{ 'd',{   10,  10,   10 } },
+				{ 'u',{ -185,   0, -185 } },
+				{ 'd',{   10, 128,   10 } },
+				{ 'u',{ -125, -10, -125 } },
+				{ 'd',{  -52,  40,  -52 } },
+				{ 'u',{ -176, 130, -176 } }
+			};
+
+			ADDpts(1, 0);
+		}
+
 	}
-	currentLetter->iterPtr = new size_t();
+	else if (this->TDKorNFU == 'N')
+	{
+		if (alet == 'N')			// Letter N
+		{
+			this->currentLetter = new aLetter;
+			currentLetter->iterPtr = new size_t();
+			currentLetter->LetOrigin[0] = 0;
+			currentLetter->LetOrigin[1] = 0;
+			currentLetter->LetOrigin[2] = 0;
+
+			currentLetter->letSize = 6;
+			currentLetter->letPts = new LetterPts[currentLetter->letSize]{
+				{ 'd',{   10,  10,   10 } },
+				{ 'u',{ -185,   0, -185 } },
+				{ 'd',{   14,   0,   14 } },
+				{ 'u',{ -175, 126, -175 } },
+				{ 'd',{   10, 119,   10 } },
+				{ 'u',{ -185,   0, -185 } }
+			};
+
+			ADDpts(1, 0);
+			ADDpts(5, 4);
+		}
+		else if (alet == 'F')		// Letter F
+		{
+			this->currentLetter = new aLetter;
+			currentLetter->iterPtr = new size_t();
+			currentLetter->LetOrigin[0] = 0;
+			currentLetter->LetOrigin[1] = 0;
+			currentLetter->LetOrigin[2] = 0;
+
+			currentLetter->letSize = 6;
+			currentLetter->letPts = new LetterPts[currentLetter->letSize]{
+				{ 'd',{   10,  10,   10 } },
+				{ 'u',{ -185,   0, -185 } },
+				{ 'd',{  -10, -10,  -10 } },
+				{ 'u',{  -10, 120,  -10 } },
+				{ 'd',{  -80, -10,  -80 } },
+				{ 'u',{  -80, 110,  -80 } }
+			};
+
+			ADDpts(1, 0);
+		}
+		else if (alet == 'U')		// Letter U
+		{
+
+		}
+
+	}
+#ifdef DEBUG
+	else
+		Serial.println("??");
+#endif // DEBUG
 }
 
-void LettersClass::ADDpts(float despts[3], float srcpts[3], float px, float py, float pz)
+void LettersClass::tiltLetter(float tiltangInRad)
 {
-	despts[0] = srcpts[0] + px;
-	despts[1] = srcpts[1] + py;
-	despts[2] = srcpts[2] + pz;
+	for (size_t i = 0; i < currentLetter->letSize; i++)
+	{
+		currentLetter->letPts[i].pts[0] = currentLetter->LetOrigin[0] + currentLetter->letPts[i].pts[0] * sin(tiltangInRad);
+		currentLetter->letPts[i].pts[1] = currentLetter->LetOrigin[1] + currentLetter->letPts[i].pts[1];
+		currentLetter->letPts[i].pts[2] = currentLetter->LetOrigin[2] + currentLetter->letPts[i].pts[2] * cos(tiltangInRad);
+	}
+}
+
+void LettersClass::deleteLetter()
+{
+	if (currentLetter)
+	{
+		if (currentLetter->iterPtr)
+		{
+			delete currentLetter->iterPtr;
+			currentLetter->iterPtr = nullptr;
+#ifdef DEBUG
+			Serial.println("Iter deleted!!");
+#endif // DEBUG
+		}
+		if (currentLetter->letPts)
+		{
+			delete[] currentLetter->letPts;
+			currentLetter->letPts = nullptr;
+#ifdef DEBUG
+			Serial.println("Pts deleted!!");
+#endif // DEBUG
+		}
+		delete currentLetter;
+#ifdef DEBUG
+		Serial.println("Letter deleted!!");
+#endif // DEBUG
+	}
+}
+
+void LettersClass::ADDpts(uint8_t despts, uint8_t srcpts /*, float px, float py, float pz*/)
+{
+	currentLetter->letPts[despts].pts[0] += currentLetter->letPts[srcpts].pts[0];
+	currentLetter->letPts[despts].pts[1] += currentLetter->letPts[srcpts].pts[1];
+	currentLetter->letPts[despts].pts[2] += currentLetter->letPts[srcpts].pts[2];
+
+	//currentLetter->letPts[despts].pts[0] = currentLetter->letPts[srcpts].pts[0] + px;
+	//currentLetter->letPts[despts].pts[1] = currentLetter->letPts[srcpts].pts[1] + py;
+	//currentLetter->letPts[despts].pts[2] = currentLetter->letPts[srcpts].pts[2] + pz;
 }
 
 LettersClass::aLetter * LettersClass::getALetter(char clet)
@@ -105,8 +216,34 @@ LettersClass::aLetter * LettersClass::getALetter(char clet)
 		else if (clet == 'F')		return this->letterTwo;
 		else if (clet == 'U')		return this->letterThree;
 	}
-	Serial.println("Invalid letter, you should choose from letters " + this->TDKorNFU);
+	Serial.println("\nInvalid letter, you should choose from letters " + this->TDKorNFU);
 	return nullptr;
+}
+
+/*----------------------------Return Points-----------------------------------*/
+float * LettersClass::getLetPts()
+{
+	return currentLetter->letPts[*currentLetter->iterPtr].pts;
+}
+
+char LettersClass::getLetLift()
+{
+	return currentLetter->letPts[*currentLetter->iterPtr].penlift;
+}
+
+bool LettersClass::nextPoint()
+{
+	if (++(*currentLetter->iterPtr) >= currentLetter->letSize)
+	{
+		delete currentLetter->iterPtr;
+		currentLetter->iterPtr = nullptr;
+#ifdef DEBUG
+		Serial.println("Iter deleted in nxt!!");
+#endif // DEBUG
+		return false;
+	}
+
+	return true;
 }
 
 /*----------------------------Print and Show----------------------------------*/
@@ -163,34 +300,6 @@ void LettersClass::iterPrint()
 	} while (nextPoint());
 }
 
-/*----------------------------Return Points-----------------------------------*/
-float * LettersClass::getLetPts()
-{
-	return currentLetter->letPts[*currentLetter->iterPtr].pts;
-}
-
-char LettersClass::getLetLift()
-{
-	return currentLetter->letPts[*currentLetter->iterPtr].penlift;
-}
-
-bool LettersClass::nextPoint()
-{
-	/*if (*currentLetter->iterPtr == 0)
-	{
-		Serial.print("Size: ");
-		Serial.println(currentLetter->letSize);
-	}*/
-
-	if (++(*currentLetter->iterPtr) >= currentLetter->letSize)
-	{
-		delete currentLetter->iterPtr;
-		currentLetter->iterPtr = nullptr;
-		return false;
-	}
-	//Serial.println(*currentLetter->iterPtr);
-	return true;
-}
 
 //void LettersClass::ptsAssign(float tmppts[3], float px, float py, float pz)
 //{

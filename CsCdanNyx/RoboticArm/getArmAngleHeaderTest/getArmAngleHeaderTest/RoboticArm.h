@@ -11,7 +11,11 @@
 
 // Enable debugging
 #define DEBUG
-//#define ErrorOut
+#define ErrorOut
+#ifdef ErrorOut
+	#define ExcessedErrorOut
+#endif // ErrorOut
+
 //#define ErrorHandle
 #define TEST
 
@@ -65,9 +69,9 @@ class RoboticArmClass
 	//RoboticArmClass();
 	void initServo();
 	int initPosit(float ix = 300, float iy = 0, float iz = 300, float angSpeed = ANGULARSPEED);
-	
+	void setTilt(float AngInDegree = 60);
 	int ArmErrorHandle();
-
+	
 	// H3 ///// Debugging ///////////////////////////
 	void setJ(float * Ang);
 	void servoInit();
@@ -115,8 +119,8 @@ class RoboticArmClass
 	
 	
 	/**----------------------Writing-----------------------------**/
-	void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
-	void setPenLift(float * Ang, char UpvDn, float penAng);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
+	//void LiftPen(float * Ang, char UpvDn, float penliftAng = 20);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
+	//void setPenLift(float * Ang, char UpvDn, float penAng);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
 	void chooseWord(char TDKorNFU);
 	void writeLetter(char clet);
@@ -133,10 +137,10 @@ class RoboticArmClass
 	//float * getXYZ();
 	//void moveArmPath(float xd, float yd, float zd, float step = 1);	// step defines the distance(cm) arm moves in 1 step.
 
-	float tiltAngle = 0;						// alpha		// The angle ( in Radian!!! ) of inclination of the plane which the Claw parallels to.
 	//float x = initPoint[0], y = initPoint[1], z = initPoint[2];						// Position coordinate.
 
 private:
+	Servo servoAR[6];
 	float initXYZ[3];
 	float baseDegree[6] = { 90, 90, 90, 90, 140, 60 };	// Base Angle for calculations.
 
@@ -145,10 +149,7 @@ private:
 
 	float J[6] = { -75, 0, 90, 0, 40, 60 };				// Each Servo's angle.   Rest arm angle: absolute(J): 12(-75),93(0),180(90),90(0),180(40).
 	//float J[6] = { 0, 0, 90, 0, 40, 0 };
-
-	//float tiltAngle = 0;						// alpha		// The angle ( in Radian!!! ) of inclination of the plane which the Claw parallels to.
-
-	Servo servoAR[6];
+	float tiltAngle = 0;						// alpha		// The angle ( in Radian!!! ) of inclination of the plane which the Claw parallels to.
 
 	uint8_t ERRcode = 0;			// 0 success, -1 restoration, -2 asin err, 1 ang excessed ( > 0 could effect on arm execution, while < 0 not. )
 	// Arm's constant settings(mm).
@@ -158,9 +159,9 @@ private:
 	const float arm4ToXYang = -0.214436f;	// thetap			// The angle between arm[4] and X-Y parallel plane.
 
 	//-------Challenge settings
-	bool needPenlift = false;
-	float penliftAng = 20 / Rad2Degree;
-	bool penHold = false;
+	//bool needPenlift = false;
+	//float penliftAng = 20 / Rad2Degree;
+	//bool penHold = false;
 };
 
 extern RoboticArmClass Arm;
