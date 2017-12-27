@@ -68,6 +68,17 @@ int RoboticArmClass::ArmErrorHandle()
 
 // H3 ///// Debugging ///////////////////////////
 
+void RoboticArmClass::JandPositInitial()
+{
+	J[0] = -88;
+	J[1] = -5;
+	J[2] = 90;
+	J[3] = 0;
+	J[4] = 40;
+	J[5] = 60;
+	armGoDirect(initXYZ, ANGULARSPEED);
+}
+
 void RoboticArmClass::setJ(float * Ang)
 {
 	for (size_t i = 0; i < 6; i++)
@@ -208,7 +219,8 @@ void RoboticArmClass::getArmAngleDeg(float xp, float yp, float zp, float * Deg, 
 	Ang[3] = -Ang[2] + M_PI_2 - asin(AsinIndCheck);
 
 	// Ang[4]
-	Ang[4] = -Ang[3] - Ang[2] + tiltAngle;
+	//Ang[4] = -Ang[3] - Ang[2] + tiltAngle;
+	Ang[4] = -Ang[3] - Ang[2] - tiltAngle;
 
 	// Rounding
 	for (size_t i = 0; i < 5; i++)
@@ -347,8 +359,8 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 	getArmAngleDeg(xd, yd, zd, Ang, true);
 
 #ifdef DEBUG
-	printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
-	//showXYZ("Dest XYZ: ");
+	//printOut(Ang, SIZEOF_ARRAY(Ang), "Dest Ang:\t");
+	//showJ("From J: ");
 #endif // DEBUG
 
 	for (size_t i = 0; i < 5; i++)
@@ -404,7 +416,7 @@ void RoboticArmClass::armGoDirect(float xd, float yd, float zd, float angSpeed)
 
 	///print
 #ifdef DEBUG
-	showJ("Final J: ");
+	//showJ("Final J: ");
 	//showXYZ("Final XYZ: ");
 #endif // DEBUG
 
@@ -451,7 +463,6 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Start GrabPen!!");
 #endif // DEBUG
-	//int initxyz[3] = { this->x,this->y,this->z };
 	int liftPenHeight = 75;
 	float offsetY = 3;
 	float offsetX = 13;
@@ -541,16 +552,16 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 #ifdef DEBUG
 			//Serial.println(notDetected?"not":"yes");
 #endif // DEBUG			
-		if (notDetected)
-		{
-			delay(OPTIC_DELAY);
-			notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
 			if (notDetected)
 			{
-#ifdef DEBUG
+				delay(OPTIC_DELAY);
+				notDetected = digitalRead(OPTIC_Y_INPUT_PIN);
+				if (notDetected)
+				{
+	#ifdef DEBUG
 					Serial.println("End of the Pen at Z.");
 					//showJ("EndZ:\t");
-#endif // DEBUG					
+	#endif // DEBUG					
 					armGoLine(this->x, this->y, this->z - 0.5 - GrabPtUpperBoundfromEnd, step / 2);
 					break;
 				}
@@ -641,8 +652,7 @@ int RoboticArmClass::GrabPen(float penX, float penY, float penZ, float step, flo
 	showXYZ("Grabbed, go back!!\n");
 #endif // DEBUG	
 	
-	//armGoLine(initxyz[0], initxyz[1], initxyz[2], step);
-	armGoDirect(initXYZ[0], initXYZ[1], initXYZ[2], angspeed);
+	armGoDirect(initXYZ, angspeed);
 
 	return 1;	// In case of slides or controller needs the return value.
 }
@@ -654,7 +664,7 @@ int RoboticArmClass::DropPen(float canX, float canY, float canZ, float step, flo
 #ifdef DEBUG
 	Serial.println("Start DropPen!!");
 #endif // DEBUG
-	//int initxyz[3] = { this->x, this->y, this->z };
+
 	/*armGoLine((x + 50), y, z, step);
 	armGoLine(x, y, canZ, step);
 	armGoLine(canX, y, z, step);*/
@@ -701,53 +711,71 @@ void RoboticArmClass::chooseWord(char TDKorNFU)
 	Letters.setWord(TDKorNFU);
 }
 
-void RoboticArmClass::writeLetter(char clet)
+void RoboticArmClass::writeLetter(char clet, float step, float angSpeed)	// DELAY???
 {
+
 	//uint8_t PenNibClawDIS = 145 - 67 - 10;			// Pen length - work point and interruptor - distance to the end of the pen.
 	setTilt(60);
 	float liftHeight[2] = { -10 * sin(this->tiltAngle), 10 * cos(this->tiltAngle) };	// Lift Pen Height for x and z.
 	bool isUP = false;		// Is pen up or down.
 
-	armGoDirect(this->initXYZ);
-	Letters.initLetter(clet);
+	//armGoDirect(this->initXYZ);
+	armGoDirect(300, 0, 300, ANGULARSPEED);
+	if (clet <= 3)
+	{
+		Letters.initLetter((int)clet);
+	}
+	else
+	{
+		Letters.initLetter(clet);
+	}
 	Letters.tiltLetter(M_PI_2 - this->tiltAngle);
 #ifdef DEBUG
 	showXYZ("\nStart Writing!!\n");
+	Arm.waitkey();
 #endif // DEBUG	
-	armGoLine(Letters.getLetPts());
+	armGoLine(Letters.getLetPts(), step);
 #ifdef DEBUG
 	showXYZ("In ");
+	Arm.waitkey();
 #endif // DEBUG
 
 	while (Letters.nextPoint())
 	{
+#ifdef DEBUG
+		//Arm.waitkey();
+#endif // DEBUG
 		if (!isUP)
 		{
-			armGoLine(Letters.getLetPts());
+			armGoLine(Letters.getLetPts(), step);
 #ifdef DEBUG
 			showXYZ("GW ");
+			Arm.waitkey();
 #endif // DEBUG
 		}
 		else
 		{
 			float * tmppts = Letters.getLetPts();
-			armGoLine(tmppts[0] + liftHeight[0], tmppts[1], tmppts[2] + liftHeight[1]);
+			armGoLine(tmppts[0] + liftHeight[0], tmppts[1], tmppts[2] + liftHeight[1], step);
 #ifdef DEBUG
 			showXYZ("GH ");
+			Arm.waitkey();
 #endif // DEBUG
-			armGoLine(tmppts);
+			armGoLine(tmppts, step);
 			isUP = false;
 #ifdef DEBUG
 			showXYZ("Dn ");
+			Arm.waitkey();
 #endif // DEBUG
 		}
 		
 		if (Letters.getLetLift() == 'u')
 		{
-			armGoLine(this->x + liftHeight[0], this->y, this->z + liftHeight[1]);
+			armGoLine(this->x + liftHeight[0], this->y, this->z + liftHeight[1], step);
 			isUP = true;
 #ifdef DEBUG
 			showXYZ("Up ");
+			Arm.waitkey();
 #endif // DEBUG
 		}
 
@@ -755,8 +783,13 @@ void RoboticArmClass::writeLetter(char clet)
 		//showXYZ();
 #endif // DEBUG
 	}
+#ifdef DEBUG
+	showXYZ("Ready to back to init!!\n");
+	Arm.waitkey();
+#endif // DEBUG
 	Letters.deleteLetter();
-	armGoDirect(this->initXYZ);
+
+	armGoDirect(this->initXYZ, ANGULARSPEED);
 #ifdef DEBUG
 	showXYZ("Finished Writing!!\n");
 #endif // DEBUG

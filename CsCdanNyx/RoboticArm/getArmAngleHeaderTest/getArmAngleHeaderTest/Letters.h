@@ -45,6 +45,7 @@ class LettersClass
 
 	void setWord(char TDKvNFU);
 	void initLetter(char alet);
+	void initLetter(int letNo);
 	void tiltLetter(float tiltangInRad);
 	void deleteLetter();
 	//friend class RoboticArmClass;

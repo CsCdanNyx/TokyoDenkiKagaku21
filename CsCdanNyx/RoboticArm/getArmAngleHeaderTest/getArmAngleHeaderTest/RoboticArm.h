@@ -9,6 +9,8 @@
 	#include "WProgram.h"
 #endif
 
+
+//#define TEST
 // Enable debugging
 #define DEBUG
 #define ErrorOut
@@ -17,8 +19,6 @@
 #endif // ErrorOut
 
 //#define ErrorHandle
-#define TEST
-
 
 
 // Pin settings
@@ -75,6 +75,8 @@ class RoboticArmClass
 	int ArmErrorHandle();
 	
 	// H3 ///// Debugging ///////////////////////////
+	void JandPositInitial();
+
 	void setJ(float * Ang);
 	void servoInit();
 	void servoDoJ();
@@ -125,7 +127,7 @@ class RoboticArmClass
 	//void setPenLift(float * Ang, char UpvDn, float penAng);			// Lift up or down the pen for the next stroke. UpvDn: 'u' for up, 'd' for down.
 
 	void chooseWord(char TDKorNFU);
-	void writeLetter(char clet);
+	void writeLetter(char clet, float step = STEPSPEED / 3.0f, float angSpeed = ANGULARSPEED / 3.0f);
 	//void writeLetter(char clet, float LetOrigin[3], float tilt);
 	
 	/*----------------------------Print and Show----------------------------------*/

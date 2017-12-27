@@ -24,7 +24,7 @@ void setup() {
 
 	Arm.showJ("init J:\t");
 	Arm.showXYZ("init Posit:\t");
-	Arm.waitkey();
+	//Arm.waitkey();
 
 	//Arm.armGoLine(327.125, -27.125, 311.334);
 	//Arm.tiltAngle = 60 / Rad2Degree;
@@ -36,16 +36,36 @@ void setup() {
 	//Letters.showLetterStrokes(4, true, "setup word:\n");
 	//Letters.initLetter('T', M_PI_2 - 60 / Rad2Degree);
 
-
 	//Letters.iterPrint();
 	//Letters.initLetter('D', M_PI_2 - 60 / Rad2Degree);
 	//Letters.showLetterStrokes(1, true, "After init:\n");
 
 
-	Arm.chooseWord('T');
-	Arm.writeLetter('T');
-	Arm.writeLetter('D');
-	Arm.writeLetter('K');
+
+	//Arm.GrabPen(430, 0, 110);
+	//Arm.waitkey();
+	//Arm.DropPen(400, 50, 250);
+	Arm.waitkey();
+
+	Arm.setTilt(60);
+	Arm.armGoDirect(300, 0, 300);
+	Arm.showJ();
+
+	//Arm.waitkey();
+	//Arm.armGoLine(345, -75, 341.34);
+
+	//Arm.chooseWord('T');
+	//Arm.writeLetter('T');
+	//Arm.writeLetter('D');
+	//Arm.writeLetter('K');
+
+	//Arm.chooseWord('N');
+	//Arm.waitkey();
+	//Arm.writeLetter('N');
+	//Arm.waitkey();
+	//Arm.writeLetter('F');
+	//Arm.waitkey();
+	//Arm.writeLetter('U');
 
 	Arm.showJ("\nEnding J: ");
 	Serial.println("End setup!!");
